@@ -1,0 +1,1265 @@
+<html>
+    <head>
+        <!-- Google Tag Manager -->
+        <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-N6W5WC');</script>
+        <!-- End Google Tag Manager -->
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&display=swap" rel="stylesheet">
+
+        <!-- Latest compiled and minified JavaScript -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-latest.debug.min.js" integrity="sha512-+9kgaOpvAGdLyaCeMWkYXt4R8m/fRgbGud4wzsJQ1cwhNYrQj+a8E3pstfc6E9zuHhbyzSiC+AHxeZ5SFVyDmQ==" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout.mapping/2.3.2/knockout.mapping.min.js" integrity="sha512-sCLnmp1UrJki3R9zwZMLXg9lXlGxJ6yFVuiSJ1pi1qRST3CJPAkJIhOHEQZz10P2gWgY3H8Y33na5Ak9PV5PLA==" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-sparklines/2.1.2/jquery.sparkline.min.js" integrity="sha512-3PRVLmoBYuBDbCEojg5qdmd9UhkPiyoczSFYjnLhFb2KAFsWWEMlAPt0olX1Nv7zGhDfhGEVkXsu51a55nlYmw==" crossorigin="anonymous"></script>
+        <script src="calculated_merged.json"></script>
+
+        <script>
+            var SHRM = SHRM || {};
+            SHRM.utils = {};
+            
+            (function () {
+                this.getRemoteData = function (path_to_csv){
+                    if (this.ajaxResults[path_to_csv]){
+                        return this.ajaxResults[path_to_csv]
+                    }else{
+                        var ajax = $.get(path_to_csv,function(response){
+                            //do nothing
+                        });
+                        console.log('Fetching new data: ' + path_to_csv)
+                        this.ajaxResults[path_to_csv] = ajax
+                        return ajax;
+                    }
+                };
+
+                this.convertCSVtoJSON = function (csv, arrKeys) {
+                    let vals = csv.split('\n'), ret = [];
+                    
+                    for( let i = 1, len = vals.length; i < len; i++ ){
+                        if (vals[i].length > 0){
+                            let option = vals[i].split(';');
+                            if (i == 1){
+                                ret.push('{')
+                            }else{
+                                ret.push(',{')
+                            }
+                            
+                            $.each(arrKeys, function( index, value ) {
+                                params=option[index].split('=');
+                                if (params.length == 2) {
+                                    ret.push( '"' + value + '_keyval": "' + option[index].replace(/(\r\n|\n|\r)/gm,"") + '", "' + value + '": "' + params[1].replace(/(\r\n|\n|\r)/gm,"") + '"');
+                                }else{
+                                    ret.push( '"' + value + '_keyval": "' + option[index].replace(/(\r\n|\n|\r)/gm,"") + '", "' + value + '": "' + params[0].replace(/(\r\n|\n|\r)/gm,"") + '"');
+                                }
+                                //ret.push( '"' + value + '": "' + option[index].replace(/(\r\n|\n|\r)/gm,"") + '"');
+                                if (arrKeys.length - 1 != index){ ret.push(','); }
+                            });
+                            ret.push('}')
+                        }
+                    }
+                    //console.log(JSON.parse('[' + ret.join("") + ']'));
+                    return JSON.parse('[' + ret.join("") + ']');
+                };
+
+                this.getDistinctVals = function (dataObj, key){
+                    var lookup = {};
+                    var result = [];
+
+                    for (var item, i = 0; item = dataObj[i++];) {
+                        var value = eval('item.' + key);
+
+                        if (value) {
+                            if (!(value in lookup)) {
+                                lookup[value] = 1;
+                                result.push(value);
+                            }
+                        }
+                    }
+
+                    return result
+                };
+
+                this.configureDropDowns = function (dataObj, key, selectObj, optgroup_label) {
+                    //debugger
+                    result = this.getDistinctVals(dataObj, key).filter(function(e) { return e !== '' })
+                    var $optgroup = selectObj
+                    if (optgroup_label){
+                        $optgroup = $("<optgroup label='" + optgroup_label + "'>"); 
+                    }
+                    $.each(result, function (index, value) {
+                        params=value.split('=');
+                        if (params.length == 2) {
+                            $optgroup.append(new Option(params[0], params[1]))
+                        }else{
+                            $optgroup.append(new Option(value, value))
+                        }
+                    });
+                    if (optgroup_label){
+                        selectObj.append($optgroup)
+                    }
+
+                    selectObj.prop('data-val', dataObj);
+                    $('.selectpicker').selectpicker('refresh');
+                };
+
+                this.disableOptions = function (arrOptions, objSelect){
+                    var $options = objSelect.find('option');
+                    $options.prop('disabled', false);
+                    
+                    if (arrOptions.length == 0) {
+                        objSelect.val('')
+                    } else {
+                        $options.each(function () {
+                            if (( $(this).val() == '' ) || ( $.inArray($(this).val(), arrOptions) >= 0 )){
+                                $(this).prop('disabled', false)
+                            }else{
+                                $(this).prop('disabled', true)
+                            }
+                        });
+                        if(objSelect.find('option:selected').prop('disabled')){
+                            objSelect.val('');
+                        }
+                    }
+                    objSelect.trigger('change');
+
+                    /*
+                    // The code below needs to be rewritten to NOT use objSelect.closest('.tab-pane').find() 
+                    if (objSelect.closest('.tab-pane').find('select')[2]){
+                        //console.log('Selected: ' + objSelect.closest('.tab-pane').find('select')[0].value + ' -- ' + objSelect.closest('.tab-pane').find('select')[1].value + ' -- ' + objSelect.closest('.tab-pane').find('select')[2].value);
+                    }
+                    */
+                    
+                };
+
+                this.filterJSON = function (dataObj, criteria){
+                    return dataObj.filter(o => Object.keys(criteria).every(k => criteria[k].some(f => o[k] === f)));
+                };
+                
+                this.resetDrillDownSiblings = function(classname, oSelects){
+                    $.each(oSelects, function( index, value ) {
+                        //change it to read class vs index
+                        if (!($( oSelects[index] ).hasClass(classname))) {
+                            $( oSelects[index] ).val('');
+                            $( oSelects[index] ).selectpicker('refresh');
+                        }
+                    });
+                };
+
+                this.filterDrillDownSiblings = function(ndx, filterBy, objContainter, arrConfigKeys){
+                    var dataObj = objContainter.find('select:nth(' + ndx + ')').prop('data-val');
+                    var filteredObj = this.filterJSON(dataObj, filterBy)
+                    var arrOptions = this.getDistinctVals(filteredObj, arrConfigKeys[ndx + 1])
+                    this.disableOptions(arrOptions, objContainter.find('select:nth(' + (ndx+1) + ')'));
+                    $('.selectpicker').selectpicker('refresh');
+                };
+
+                this.ajaxResults = {};
+
+                this.globalConfigKeys = [];
+
+                this.capitalize = function(s){
+                    if (typeof s !== 'string') return ''
+                    return s.charAt(0).toUpperCase() + s.slice(1)
+                };
+
+                this.prepHTML2CSV = function(arr, columnCount, initial){
+                    /*
+                    * Convert data array to CSV string
+                    * @param arr {Array} - the actual data
+                    * @param columnCount {Number} - the amount to split the data into columns
+                    * @param initial {String} - initial string to append to CSV string
+                    * return {String} - ready CSV string
+                    */
+
+                    var row = ''; // this will hold data
+                    var delimeter = ','; // data slice separator, in excel it's `;`, in usual CSv it's `,`
+                    var newLine = '\r\n'; // newline separator for CSV row
+
+                    /*
+                    * Convert [1,2,3,4] into [[1,2], [3,4]] while count is 2
+                    * @param _arr {Array} - the actual array to split
+                    * @param _count {Number} - the amount to split
+                    * return {Array} - splitted array
+                    */
+                    function splitArray(_arr, _count) {
+                        var splitted = [];
+                        var result = [];
+                        _arr.forEach(function(item, idx) {
+                        if ((idx + 1) % _count === 0) {
+                            splitted.push(item);
+                            result.push(splitted);
+                            splitted = [];
+                        } else {
+                            splitted.push(item);
+                        }
+                        });
+                        return result;
+                    }
+                    var plainArr = splitArray(arr, columnCount);
+                    // don't know how to explain this, so you'll just have to like follow the code to understand
+                    // it converts `['a', 'b', 'c']` to `a,b,c` string
+                    plainArr.forEach(function(arrItem) {
+                        arrItem.forEach(function(item, idx) {
+                        row += item + ((idx + 1) === arrItem.length ? '' : delimeter);
+                        });
+                        row += newLine;
+                    });
+                    return initial + row;
+                };
+
+                this.getUrlParameter = function getUrlParameter(sParam) {
+                    var sPageURL = window.location.search.substring(1),
+                        sURLVariables = sPageURL.split('&'),
+                        sParameterName,
+                        i;
+
+                    for (i = 0; i < sURLVariables.length; i++) {
+                        sParameterName = sURLVariables[i].split('=');
+
+                        if (sParameterName[0] === sParam) {
+                            return typeof sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+                        }
+                    }
+                    return false;
+                };
+
+                this.loadScript = src => {
+                    return new Promise((resolve, reject) => {
+                        const script = document.createElement('script')
+                        script.type = 'text/javascript'
+                        script.onload = resolve
+                        script.onerror = reject
+                        script.src = src
+                        document.head.append(script)
+                    })
+                }
+        
+                this.sleep = function(ms){
+                    return new Promise(resolve => setTimeout(resolve, ms));
+                }
+        
+            }).apply(SHRM.utils);
+
+            function initDrillDown(objContainter){
+                if (SHRM.utils.selectPickersLoaded === undefined){
+                    var configKeys = SHRM.utils.tabs.find(tab => tab.name === SHRM.utils.pageConfig.categoryText)["data-val-config-keys"]
+                    var configPath = SHRM.utils.tabs.find(tab => tab.name === SHRM.utils.pageConfig.categoryText)["data-val-config-path"]
+                    var filterBy = SHRM.utils.tabs.find(tab => tab.name === SHRM.utils.pageConfig.categoryText)["data-val-filterby"]
+                    
+                    if (configKeys){
+                        arrConfigKeys = eval(configKeys);
+                    }else{
+                        arrConfigKeys = SHRM.utils.pageConfig.configKeys
+                    }
+                    
+                    if (!(filterBy)) {
+                        filterBy = SHRM.utils.pageConfig.filterBy
+                    }
+
+                    var dataObj = null
+                    if ((objContainter) && (arrConfigKeys.length)){
+                        if (SHRM.utils.dataObj){
+                            dataObj = SHRM.utils.dataObj
+                            if (filterBy == 'by-1'){
+                                arrConfigKeys.forEach(function (configKey, index) {
+                                    SHRM.utils.configureDropDowns(dataObj, configKey + '_keyval', $('.selectpicker-1'), SHRM.utils.capitalize(configKey))
+                                });
+                                //SHRM.utils.configureDropDowns(dataObj, arrConfigKeys[0] + '_keyval', $('.selectpicker-1'), SHRM.utils.capitalize(arrConfigKeys[0]))
+                                //SHRM.utils.configureDropDowns(dataObj, arrConfigKeys[1] + '_keyval', $('.selectpicker-1'), SHRM.utils.capitalize(arrConfigKeys[1]))
+                                //SHRM.utils.configureDropDowns(dataObj, arrConfigKeys[2] + '_keyval', $('.selectpicker-1'), SHRM.utils.capitalize(arrConfigKeys[2]))
+                            }else{
+                                SHRM.utils.configureDropDowns(dataObj, arrConfigKeys[0] + '_keyval', $('.selectpicker-1'))
+                                SHRM.utils.configureDropDowns(dataObj, arrConfigKeys[1] + '_keyval', $('.selectpicker-2'))
+                                SHRM.utils.configureDropDowns(dataObj, arrConfigKeys[2] + '_keyval', $('.selectpicker-3'))
+                            }
+                        }else{
+                            if (configPath == null){
+                                alert('The path to the config has not been configured for ' + objContainter.attr('id'));
+                            }else{
+                                $.when(SHRM.utils.getRemoteData(configPath)).done(function(response,status,xhrObj){
+                                    dataObj = SHRM.utils.convertCSVtoJSON(response, arrConfigKeys)
+                                    
+                                    if (filterBy == 'by-1'){
+                                        arrConfigKeys.forEach(function (configKey, index) {
+                                            SHRM.utils.configureDropDowns(dataObj, configKey + '_keyval', $('.selectpicker-1'), SHRM.utils.capitalize(configKey))
+                                        });
+                                        //SHRM.utils.configureDropDowns(dataObj, arrConfigKeys[0] + '_keyval', $('.selectpicker-1'), SHRM.utils.capitalize(arrConfigKeys[0]))
+                                        //SHRM.utils.configureDropDowns(dataObj, arrConfigKeys[1] + '_keyval', $('.selectpicker-1'), SHRM.utils.capitalize(arrConfigKeys[1]))
+                                        //SHRM.utils.configureDropDowns(dataObj, arrConfigKeys[2] + '_keyval', $('.selectpicker-1'), SHRM.utils.capitalize(arrConfigKeys[2]))
+                                    }else{
+                                        SHRM.utils.configureDropDowns(dataObj, arrConfigKeys[0] + '_keyval', $('.selectpicker-1'))
+                                        SHRM.utils.configureDropDowns(dataObj, arrConfigKeys[1] + '_keyval', $('.selectpicker-2'))
+                                        SHRM.utils.configureDropDowns(dataObj, arrConfigKeys[2] + '_keyval', $('.selectpicker-3'))
+                                    }
+
+                                }).fail(function(response,status,xhrObj){
+                                    console.error(response)
+                                    console.error('The required config was not found at ' + configPath)
+                                });
+                            }
+                        }
+                    }
+                    SHRM.utils.selectPickersLoaded = true
+                }
+            };
+            
+            function getJson(){
+                //debugger
+                var json = '{"list":' + JSON.stringify(SHRM.utils.tabs) + '}'
+                return json;
+            }
+
+            function ViewModel(josnObj){
+                //debugger
+                //this.list = josnObj.list;
+                this.tabledata_filtered = SHRM.utils.data.tabledata
+            }
+
+            function initHTML(){
+                //var json  = getJson();
+                //json = '{"list":' + myjson + '}'
+                //var jObj = JSON.parse(json);
+
+                //Creating view model for html
+                //var viewModel = new ViewModel(jObj);
+
+                var viewModel = {
+                    filtered_results: ko.observableArray()
+                }
+                SHRM.utils.pageConfig.viewModel = viewModel
+                
+                //Applying the view model to html UI
+                ko.applyBindings(SHRM.utils.pageConfig.viewModel); 
+            }
+
+            function initDefaults(filterBy, globalConfigKeys, TopLevelType = null, SubLevelType = null, selectpicker = null, categoryType = null){
+                var bCallUpdateURL = true
+                var arrURLparams = window.location.hash.split('/')
+                
+                // Determine if the page will be healthcare, retirement, etc
+                if ((arrURLparams.length >= 3) && (arrURLparams.length <= 5)){
+                    // set defaults from URL params
+                    if (String(arrURLparams[1]) != '') { TopLevelType = String(arrURLparams[1])}
+                    if (String(arrURLparams[2]) != '') { SubLevelType = String(arrURLparams[2])}
+                }
+                //debugger
+
+                TopLevelType = 'empathy'
+                SubLevelType = 'default'
+
+                if(SubLevelType){
+                    if (SHRM.utils[SubLevelType]){
+                        SHRM.utils.tabs = SHRM.utils[SubLevelType]
+                        categoryType = SHRM.utils.tabs[0].id
+                    }else{
+                        alert('The configuration for SHRM.utils.' + SubLevelType + ' has not been configured properly.')
+                    }
+                }else{
+                    alert('URL is not properly configured.\n\nA properly configured URL should look similar to:\n.../index.html#/empathy/default')
+                    return
+                }
+                
+                // Init variables
+                SHRM.utils.pageConfig = {}
+                SHRM.utils.pageConfig.filterBy = filterBy
+                SHRM.utils.pageConfig.configKeys = globalConfigKeys
+                SHRM.utils.pageConfig.TopLevelType = TopLevelType
+                SHRM.utils.pageConfig.SubLevelType = SubLevelType
+                SHRM.utils.pageConfig.categoryType = categoryType
+
+                initHTML()
+
+                if (categoryType){
+                    SHRM.utils.pageConfig.categoryText = $('a[href$="' + categoryType + '"]').text()
+                    SHRM.utils.pageConfig.categoryCode = $('a[href$="' + categoryType + '"]').attr('categoryCode')
+                }
+                SHRM.utils.pageConfig.selectpicker_1 = selectpicker
+                SHRM.utils.pageConfig.exportType = ''
+                
+                if (arrURLparams.length == 5){
+                    // set defaults from URL params
+                    if (String(arrURLparams[1]) != '') { TopLevelType = String(arrURLparams[1])}
+                    if (String(arrURLparams[2]) != '') { SubLevelType = String(arrURLparams[2])}
+                    if ((String(arrURLparams[3]) != '') && (String(arrURLparams[3]) != 'all')) { 
+                        selectpicker = String(arrURLparams[3])
+                        SHRM.utils.pageConfig.selectpicker_1 = selectpicker
+                        localStorage.setItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + ".selectpicker_1", selectpicker)
+                    }
+                    
+                    if (String(arrURLparams[4]) != '') { 
+                        expected_tab = String(arrURLparams[4])
+                        if (parseInt(expected_tab[expected_tab.length -1]) > SHRM.utils[SubLevelType].length) {
+                            categoryType = expected_tab.replace(expected_tab[expected_tab.length -1], '1')
+                        }else{
+                            categoryType = String(arrURLparams[4])
+                        }
+                        SHRM.utils.pageConfig.categoryType = '#' + categoryType
+                        SHRM.utils.pageConfig.categoryText = $('a[href$="' + categoryType + '"]').text()
+                        SHRM.utils.pageConfig.categoryCode = $('a[href$="' + categoryType + '"]').attr('categoryCode')
+                        
+                        localStorage.setItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + "." + SubLevelType + ".categoryType", '#' + categoryType)
+                        $('a[href$="' + categoryType + '"]').trigger('click')
+                        bCallUpdateURL = false
+                    }
+                }else{
+                    // set defaults from local storage
+                    if (localStorage.getItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + ".selectpicker_1")){
+                        selectpicker = localStorage.getItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + ".selectpicker_1")
+                        SHRM.utils.pageConfig.selectpicker_1 = selectpicker
+                    }
+                    if (localStorage.getItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + ".categoryType")) {
+                        categoryType = localStorage.getItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + "." + SubLevelType +  ".categoryType")
+                        SHRM.utils.pageConfig.categoryType = categoryType
+                        SHRM.utils.pageConfig.categoryText = $('a[href$="' + categoryType + '"]').text()
+                        SHRM.utils.pageConfig.categoryCode = $('a[href$="' + categoryType + '"]').attr('categoryCode')
+                        $('a[href$="' + categoryType + '"]').trigger('click')
+                        bCallUpdateURL = false
+                    }
+                }
+                
+                $('body').removeClass('hidden')
+
+                //// No tab (categoryType) has been previously selected, so the 1st tab is loaded by default
+                //// Unfortunately, 'show.bs.tab' is not triggered as expected, so we must force it
+                $('a[href$="#' + categoryType + '"]').tab('show')
+                ////$('a[href$="#' + categoryType + '"]').trigger('show.bs.tab')
+                ////$('a[href$="#' + categoryType + '"]').trigger('shown.bs.tab')
+                if (bCallUpdateURL) { updateURL() }
+            }
+
+            function buildURL(){
+                url = '#/' + SHRM.utils.pageConfig.TopLevelType + '/' + SHRM.utils.pageConfig.SubLevelType
+                if (SHRM.utils.pageConfig.selectpicker_1){
+                    //url = url + '/' + $('.selectpicker-1').attr('data-val')
+                    url = url + '/' + SHRM.utils.pageConfig.selectpicker_1 
+                }else{
+                    //url = url + '/' + $('.selectpicker-1').val()
+                    url = url + '/all'
+                }
+
+                url = url + '/' + SHRM.utils.pageConfig.categoryType.replace('#','')
+
+                if (SHRM.utils.pageConfig.exportType){
+                    url = url + '/' + SHRM.utils.pageConfig.exportType
+                }
+                return url
+            }
+
+            function updateURL(){
+                //window.history.replaceState(null, null, buildURL())
+                
+                pushToGTM()
+            }
+
+            function pushToGTM(){
+                if (window.dataLayer){
+                    // The values i mapped to below were wrong, i had to remap them.  See the second set for the correct way.
+                    //var event = SHRM.utils.pageConfig.TopLevelType + " | " + SHRM.utils.pageConfig.SubLevelType
+                    //var eventCategory = SHRM.utils.pageConfig.categoryText
+                    //var eventLabel = (SHRM.utils.pageConfig.selectpicker_1) ? SHRM.utils.pageConfig.selectpicker_1 : 'all'
+                    //var eventAction = SHRM.utils.pageConfig.exportType
+                    //var eventValue = 0
+                    
+                    var event = 'GAEvent'
+                    var eventCategory = SHRM.utils.pageConfig.TopLevelType + " | " + SHRM.utils.pageConfig.SubLevelType
+                    var eventLabel = SHRM.utils.pageConfig.categoryText
+                    var eventAction = (SHRM.utils.pageConfig.selectpicker_1) ? SHRM.utils.pageConfig.selectpicker_1 : 'all'
+                    var eventValue = SHRM.utils.pageConfig.exportType
+
+                    if (!(eventValue)) {
+                        eventValue = ''
+                    }
+
+                    console.log('pushToGTM:\nevent=' + event + ';\neventCategory=' + eventCategory + ';\neventLabel=' + eventLabel + ';\neventAction=' + eventAction + ';\neventValue=' + eventValue)
+                    
+                    window.dataLayer.push({            
+                        'event': event,            
+                        'eventCategory': eventCategory,            
+                        'eventLabel': eventLabel,
+                        'eventAction': eventAction,            
+                        'eventValue': eventValue          
+                    });
+                }
+
+                SHRM.utils.pageConfig.exportType = null
+
+                // The code above does NOT seem to want to appear in Google Analytics.
+                // The code below was written to see if this would work and appear in Google Analytics.
+
+                //src = 'gtm.html#/' + SHRM.utils.pageConfig.TopLevelType + '/' + SHRM.utils.pageConfig.SubLevelType + '/' + eventCategory + '/' + eventLabel
+                src = 'gtm.html?' + 'event=' + encodeURIComponent(event) + '&eventCategory=' + encodeURIComponent(eventCategory) + '&eventLabel=' + encodeURIComponent(eventLabel)
+                if (eventAction){
+                    if (eventAction != ''){
+                        src = src + '&eventAction=' + encodeURIComponent(eventAction)
+                    }
+                }
+                $('#gtm').attr('src', src)
+            }
+
+            function showSpinner(bShow){
+                if (bShow){
+                    $('#btnExportGroup').addClass('hidden')
+                    $('#spinner').removeClass('hidden')
+                    
+                }else{
+                    $('#spinner').addClass('hidden')
+                    $('#btnExportGroup').removeClass('hidden')
+                }
+            }
+
+            $(document).ready(function() {
+                console.time('Page load');
+
+                window.dataLayer = window.dataLayer || [];
+
+                $( window ).resize(function() {
+                    $('.row_score').each(function () {
+                    row_score_value = parseInt($(this).text())
+                    row_score_value_max = 20
+                    row_scale_width = $(this).parent().parent().find('.row_scale').width()  // 799.34376
+                    row_scale_caret_left = $(this).parent().parent().find('.row_scale_caret').position().left // -10.999994999999998
+                    row_scale_caret_left_zero = -11
+                    row_score_value_new = (row_score_value / row_score_value_max) * row_scale_width + row_scale_caret_left_zero
+                    $(this).parent().parent().find('.row_scale_caret').css('left', row_score_value_new + 'px')
+                });
+                });
+
+                $('.btn-filter').on('click', function (event){
+                    //var filterBy = SHRM.utils.tabs.find(tab => tab.name === SHRM.utils.pageConfig.categoryText)["data-val-filterby"]
+                    //var filterBy = SHRM.utils.tabs.find(tab => tab.id === SHRM.utils.pageConfig.categoryType.replace('#',''))["data-val-filterby"]
+                    //var src = ''
+                    
+                    $('.btn-export').removeClass('disabled');
+                    if (json_tabledata){
+                        if (!(SHRM.utils.data.tabledata)){
+                            SHRM.utils.data.tabledata = json_tabledata
+                        }
+                    }
+
+                    if (SHRM.utils.data.tabledata){
+                        if (SHRM.utils.pageConfig.filterBy == "by-1"){
+                            var filtered_by_category = SHRM.utils.data.tabledata.filter(a => a.eventCategory == SHRM.utils.pageConfig.categoryCode);
+                            if (SHRM.utils.pageConfig.selectpicker_1){
+                                filtered_by = filtered_by_category.filter(a => a.eventLabel == SHRM.utils.pageConfig.selectpicker_1);
+                            }else{
+                                filtered_by = filtered_by_category.filter(a => a.eventLabel == 'all');
+                            }
+                            SHRM.utils.data.tabledata_filtered = filtered_by
+                        }
+                        
+                        ko.mapping.fromJSON(JSON.stringify(filtered_by), {}, SHRM.utils.pageConfig.viewModel.filtered_results);
+                    }
+
+                    $('.row_score').each(function () {
+                        row_score_value = parseInt($(this).text())
+                        row_score_value_max = 20
+                        row_scale_width = $(this).parent().parent().find('.row_scale').width()  // 799.34376
+                        row_scale_caret_left = $(this).parent().parent().find('.row_scale_caret').position().left // -10.999994999999998
+                        row_scale_caret_left_zero = -11
+                        row_score_value_new = (row_score_value / row_score_value_max) * row_scale_width + row_scale_caret_left_zero
+                        
+                        // with animation
+                        $(this).parent().parent().find('.row_scale_caret').delay(500).animate({left: row_score_value_new + 'px'}, 1500, 'linear',
+                            function() {
+                                $(this).parent().parent().parent().find('.row_score').fadeIn('slow');
+                            });
+                        
+                        // without animation
+                        //$(this).parent().parent().find('.row_scale_caret').css('left', row_score_value_new + 'px')
+                        //$(this).parent().parent().find('.row_score').fadeIn('fast');
+                        
+                    });
+
+                });
+
+                $(document).on('shown.bs.tab', function (event) {
+                    //debugger
+                    var arrHREF = $(event.target).prop('href').split('#')
+                    var url = ''
+                    if (arrHREF.length == 2){
+                        url = arrHREF[1]
+                        var obj = $('#' + url)
+                        SHRM.utils.pageConfig.categoryType = '#' + url
+                        localStorage.setItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + "." + SHRM.utils.pageConfig.SubLevelType + ".categoryType", '#' + url)
+                        $(".navpicker option[value='" + SHRM.utils.pageConfig.categoryType.replace('#','') + "']").prop("selected", true);
+                        $('.navpicker').find('.filter-option-inner-inner').text($(event.target).text())
+                    }
+                    
+                    if (obj) {     //if ((obj) && (obj.is(':visible'))){
+                        if (SHRM.utils.pageConfig.selectpicker_1){
+                            $('.selectpicker-1').val(SHRM.utils.pageConfig.selectpicker_1)
+                            $(".selectpicker-1 option[value='" + SHRM.utils.pageConfig.selectpicker_1 + "']").prop("selected", true);
+                            //obj.find('.filter-option-inner-inner').text($(".selectpicker-1 option[value='" + SHRM.utils.pageConfig.selectpicker_1 + "']").text())
+                            $('.nav_layer3').find('.filter-option-inner-inner').text($('.selectpicker-1 option:selected').text())
+                        }
+                        $('.btn-filter').trigger('click')
+                        $('.selectpicker').focus()
+                        console.log('shown.bs.tab: ' + obj.is(':visible'))
+                    }
+
+                    updateURL()
+                });
+
+                $(document).on('show.bs.tab', function (event) {
+                    SHRM.utils.pageConfig.categoryText = $( event.target ).text()
+                    SHRM.utils.pageConfig.categoryCode = $( event.target ).attr('categoryCode')
+                    SHRM.utils.pageConfig.categoryType = $( event.target ).attr('href')
+                    id = $( event.target ).attr('href')
+                    //initDrillDown($(id));
+                    if ($('.selectpicker-1').hasClass('selectpicker')){
+                        // This is being done because of a timing issue that caused the drop down to not display properly
+                        // Basically, it wasn't fully loaded before the styling was finished
+                    }else{
+                        $('.selectpicker-1').addClass('selectpicker')
+                    }
+                });
+                
+                $('.selectpicker-1').on('change', function (event) {
+                    //var objContainter = $( event.target ).closest('.tab-pane');
+                    //debugger
+                    var filterBy = 'by-1'
+                    //var filterBy = SHRM.utils.tabs.find(tab => tab.name === SHRM.utils.pageConfig.categoryText)["data-val-filterby"]
+                    var configKeys
+                    //var configKeys = SHRM.utils.tabs.find(tab => tab.name === SHRM.utils.pageConfig.categoryText)["data-val-config-keys"]
+                    
+                    
+                    if (configKeys){
+                        arrConfigKeys = eval(configKeys);
+                    }else {
+                        arrConfigKeys = SHRM.utils.pageConfig.configKeys
+                    }
+                    
+                    if (filterBy == 'by-all'){
+                        var ndx = 0;
+                        var filterBy = { [arrConfigKeys[ndx]]: [$('.selectpicker-1').val()] }  //filterBy = { KEY1: ["VALUE1", "VALUE2"], KEY2: ["VALUE3", "VALUE4"] }
+                        SHRM.utils.filterDrillDownSiblings(ndx, filterBy, objContainter, arrConfigKeys);
+                    }else{
+                        if (filterBy == 'by-3'){
+                            SHRM.utils.resetDrillDownSiblings('selectpicker-1', $('select'));
+                        };
+                    }
+                    
+                    $('.btn-export').addClass('disabled')
+
+                    SHRM.utils.pageConfig.selectpicker_1 = $( event.target ).val()
+                    localStorage.setItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + ".selectpicker_1", $( event.target ).val())
+                    // to auto load the data without having to select the Filter button...
+                    // uncomment the lines below and add the 'hidden' to all of the filter buttons
+                    $('.btn-filter').trigger('click')
+
+                    updateURL()
+                });
+
+                $('.selectpicker-2').on('change', function (event) {
+                    var arrConfigKeys = SHRM.utils.pageConfig.configKeys;
+                    var configKeys = SHRM.utils.tabs.find(tab => tab.name === SHRM.utils.pageConfig.categoryText)["data-val-config-keys"]
+                    var filterBy = SHRM.utils.tabs.find(tab => tab.name === SHRM.utils.pageConfig.categoryText)["data-val-filterby"]
+
+                    if (configKeys){
+                        arrConfigKeys = eval(configKeys);
+                    }else{
+                        arrConfigKeys = SHRM.utils.pageConfig.configKeys
+                    }
+                    
+                    if (filterBy == 'by-all'){
+                        var ndx = 1
+                        var filterBy = { [arrConfigKeys[ndx-1]]: [$('.selectpicker-1').val()], [arrConfigKeys[ndx]]: [$('.selectpicker-2').val()] } //filterBy = { KEY1: ["VALUE1", "VALUE2"], KEY2: ["VALUE3", "VALUE4"] }
+                        SHRM.utils.filterDrillDownSiblings(ndx, filterBy, objContainter, arrConfigKeys);
+                    }else{
+                        if (filterBy == 'by-3'){
+                            SHRM.utils.resetDrillDownSiblings('selectpicker-2', $('select'));
+                        };
+                    }
+                });
+
+                $('.selectpicker-3').on('change', function (event) {
+                    var filterBy = SHRM.utils.tabs.find(tab => tab.name === SHRM.utils.pageConfig.categoryText)["data-val-filterby"]
+
+                    if (filterBy == 'by-all'){
+                        //console.log('Selected: ' + objContainter.find('select:nth(0)').find('option:selected').val() + ' -- ' + objContainter.find('select:nth(1)').find('option:selected').val() + ' -- ' + objContainter.find('select:nth(2)').find('option:selected').val());
+                    }else{
+                        if (filterBy == 'by-3'){
+                            SHRM.utils.resetDrillDownSiblings('selectpicker-3', $('select'));
+                        };
+                    }
+                });
+                
+                $('.navpicker').on('change', function (event) {
+                    $('#' + $( event.target ).val()).trigger('click')
+                });
+
+                $('.export_as_csv').on('click', function (event) {
+                    showSpinner(true)
+
+                    var titles = [];
+                    var data = [];
+
+                    //Get the table headers (-- no empty column headers), this will be CSV headers
+                    //The count of headers will be CSV string separator
+                    $('.research_findings').find('thead th').each(function() {
+                        title = $(this).text().trim()
+                        if (title.length > 0) {
+                            if (!($(this).hasClass('hidden'))) {
+                                titles.push(title);
+                            }
+                        }
+                    });    
+                    
+                    //Get the actual data, this will contain all the data, in 1 array
+                    maxCols = titles.length
+                    $('.research_findings').find('tbody tr').each(function(index, obj) {
+                        //if (colCount < maxCols) {
+                            //data.push($(this).text());
+                        //}
+                        colCount = 0
+                        $( obj ).find('td').each(function(){
+                            //if (colCount < maxCols) {
+                                //debugger
+                                if (!($(this).hasClass('hidden'))) {
+                                    content = $(this).text().trim();
+                                    data.push('"' + content + '"');
+                                    colCount += 1
+                                }
+                            //}
+                            
+                        });
+                    });
+
+                    //Convert our data to CSV string
+                    var CSVString = SHRM.utils.prepHTML2CSV(titles, titles.length, '');
+                    CSVString = SHRM.utils.prepHTML2CSV(data, titles.length, CSVString);
+
+                    //Add SHRM Copyright
+                    emptyColumns = ',';
+                    CSVString += 'Copyright \u00A9 2021 Society for Human Resource Management \u00B7 Source: Empathy Index 2021' + emptyColumns.repeat(titles.length-1) + '\n'
+
+                    //Make CSV downloadable
+                    var downloadLink = document.createElement("a");
+                    //CSVString = JSON.stringify(SHRM.utils.dataObj)    // Use this if you want to download the JSON used to configure the dropdowns.
+                    var blob = new Blob(["\ufeff", CSVString]);
+                    var url = URL.createObjectURL(blob);
+
+                    downloadLink.href = url;
+                    
+                    //Create Name for download file - safe for windows, mac, etc
+                    var $tab = $('.nav-tabs'), $active = $tab.find('.nav-link.active'), tab_text = $active.text();
+                    var select_text = $('.selectpicker-1 option:selected').text();
+                    downloadName = 'SHRM Empathy Index 2021 - ' + select_text.replace(/[^a-zA-Z0-9-_\.]/g, ' ').trim()
+                    downloadName = downloadName.replace('   ', ' ')
+                    downloadName = downloadName.replace('  ', ' ')
+                    //downloadLink.download = string(downloadName)  //I don't know why this method does not work.
+                    downloadLink.download = "data.csv".replace('data', downloadName);
+
+                    //Actually download CSV
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    
+
+                    SHRM.utils.pageConfig.exportType = $( event.target ).attr('alt-href')
+                    pushToGTM()
+                    //updateURL()
+                    showSpinner(false)
+                });
+
+                $('.export_as_image').on('click', function (event) {
+                    showSpinner(true)
+
+                    SHRM.utils.loadScript("https://cdn.jsdelivr.net/npm/html2canvas@1.0.0-rc.7/dist/html2canvas.min.js")
+                        .then(() => {
+                            // add class to resize div
+                            $('.research_findings_outer').addClass("research_findings_prepare_for_export")
+                            $(window).trigger('resize')
+                            
+                            html2canvas(document.querySelector('.research_findings_outer')).then(canvas => {
+                                console.log(canvas);
+                                //saveAs(canvas.toDataURL(), 'file-name.png');
+
+                                //Create Name for download file - safe for windows, mac, etc
+                                var $tab = $('.nav-tabs'), $active = $tab.find('.nav-link.active'), tab_text = $active.text();
+                                var select_text = $('.selectpicker-1 option:selected').text();
+                                downloadName = 'SHRM Empathy Index 2021 - ' + select_text.replace(/[^a-zA-Z0-9-_\.]/g, ' ').trim()
+                                downloadName = downloadName.replace('   ', ' ')
+                                downloadName = downloadName.replace('  ', ' ')
+
+                                var link = document.createElement("a");
+                                document.body.appendChild(link);
+                                link.download = downloadName + '.png'       //link.download = "data.png";
+                                link.href = canvas.toDataURL("image/png");
+                                link.target = '_blank';
+                                link.click();
+                                
+                                $('.research_findings_outer').removeClass("research_findings_prepare_for_export")
+                                $(window).trigger('resize')
+                                
+                                SHRM.utils.sleep(2000).then(() => { showSpinner(false); });
+                            });
+                                    
+                            //alert($( event.target ).attr('alt-href'))
+                            SHRM.utils.pageConfig.exportType = $( event.target ).attr('alt-href')
+                            pushToGTM()
+                            
+                        })
+                        .catch(() => console.error('Something went wrong loading dynamic JS'))
+                });
+
+                $('.export_as_pdf').on('click', function (event) {
+                    showSpinner(true)
+                    
+                    SHRM.utils.loadScript("https://cdn.jsdelivr.net/npm/html2canvas@1.0.0-rc.7/dist/html2canvas.min.js")
+                        .then(() => SHRM.utils.loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.min.js"))
+                            .then(() => {
+                                // research_findings_outer
+                                // add class to resize div
+                                //$('.research_findings_outer').addClass("research_findings_prepare_for_export")
+                                //$(window).trigger('resize')
+
+                                html2canvas(document.querySelector('.research_findings_outer')).then(canvas => {
+                                    console.log(canvas);
+                                    //saveAs(canvas.toDataURL(), 'file-name.png');
+
+                                    //Create Name for download file - safe for windows, mac, etc
+                                    var $tab = $('.nav-tabs'), $active = $tab.find('.nav-link.active'), tab_text = $active.text();
+                                    var select_text = $('.selectpicker-1 option:selected').text();
+                                    downloadName = 'SHRM Empathy Index 2021 - ' + select_text.replace(/[^a-zA-Z0-9-_\.]/g, ' ').trim()
+                                    downloadName = downloadName.replace('   ', ' ')
+                                    downloadName = downloadName.replace('  ', ' ')
+                                    
+                                    var imgData = canvas.toDataURL('image/png');  
+                                    //var doc = new jsPDF('l', 'mm');
+                                    //doc.addImage(imgData, 'png', 10, 10);
+                                    //doc.save(downloadName + '.pdf');
+                                    if(canvas.width > canvas.height){
+                                        doc = new jsPDF('l', 'px', [canvas.width, canvas.height]);
+                                        doc.addImage(imgData, 'png', 10, 10);
+                                    }
+                                    else{
+                                        //doc = new jsPDF('p', 'px', [canvas.height-150, canvas.width-200]);
+                                        doc = new jsPDF('p', 'px', [canvas.height, canvas.width]);
+                                        doc.addImage(imgData, 'png', 10, 10);
+                                        
+                                        //doc = new jsPDF('p', 'px', [1400, 1600]);
+                                    }
+                                    //doc = new jsPDF('p', 'px', [canvas.height, canvas.width]);
+                                    //doc.addImage(imgData, 'png', 10, 10);
+                                    //doc = new jsPDF('p', 'px', [1400, 1600]);
+                                    //doc.addImage(imgData, 'png', 10, 10, canvas.width, canvas.height);
+                                    doc.save(downloadName + '.pdf');
+
+                                    //var pdf;
+                                    //pdf = new jsPDF('landscape');
+                                    //pdf.addHTML($('.research_findings_outer')[0], function() {
+                                    //    pdf.save('stacking-plan.pdf');
+                                    //});
+                                    
+                                    //$('.research_findings_outer').removeClass("research_findings_prepare_for_export")
+                                    //$(window).trigger('resize')
+                                    
+                                    SHRM.utils.sleep(2000).then(() => { showSpinner(false); });
+                                });
+
+                                
+                                //alert($( event.target ).attr('alt-href'))
+                                SHRM.utils.pageConfig.exportType = $( event.target ).attr('alt-href')
+                                pushToGTM()
+                                
+                            })
+                        .catch(() => console.error('Something went wrong loading dynamic JS'))                    
+                });
+                         
+                $('.export_as').on('mouseover', function(event) {
+                    $( event.target ).attr('href', buildURL() + '/' + $( event.target ).attr('alt-href'))
+                } );
+
+                $('.export_as').on('mouseout', function(event) {
+                    $( event.target ).attr('href', '#')
+                } );
+
+                SHRM.utils.dataObj = []
+                
+                // In the arrays below, if "data-val-filterby" = "by-1" then, region, industry and orgsize are in 1 dropdown
+                // if you want the ability to only show the industries (or orgsize) based off selected region,
+                // then change the value to "by-3" or "by-all".  Try both to understand how they work.
+                SHRM.utils.example = [
+                    {
+                        "name": "Tab Text",
+                        "eventCategory": "Tab_Text",
+                        "id": "drilldown-tab1",
+                        "data-val-file-prefix": "./data/GenHealth/GenHealth",
+                        "data-val-filterby": "by-1",
+                        "data-val-config-keys": "['region','industry','orgsize']",
+                        "data-val-config-path": "./data/config.csv"
+                    }
+                ]
+                SHRM.utils.default = [
+                    {
+                        "name": "Empathy Index",
+                        "eventCategory": "all",
+                        "id": "drilldown-tab1"
+                    }
+                ]
+
+                SHRM.utils.data = {}
+
+ 
+                json_tabledata = [
+                    {"eventCategory":"all","eventLabel":"all","plan_type":"Benefits","plan_desc":"My organization provides a sense of belonging to all staff.", "score":"15"},
+                    {"eventCategory":"all","eventLabel":"all","plan_type":"Inclusion","plan_desc":"My organization demands inclusion.", "score":"14"},
+                    {"eventCategory":"all","eventLabel":"all","plan_type":"Openness","plan_desc":"My organization fosters openness to different perspectives.", "score":"13"},
+                    {"eventCategory":"all","eventLabel":"all","plan_type":"Conflict Management","plan_desc":"My organization resolves conflict rather than buries it.", "score":"18"},
+                    {"eventCategory":"all","eventLabel":"all","plan_type":"Nondiscriminatory Practices","plan_desc":"My organization does not make decisions based upon a person's identity.", "score":"5"},
+                    {"eventCategory":"all","eventLabel":"CONSTR","plan_type":"Benefits","plan_desc":"My organization provides a sense of belonging to all staff.", "score":"18"},
+                    {"eventCategory":"all","eventLabel":"CONSTR","plan_type":"Inclusion","plan_desc":"My organization demands inclusion.", "score":"19"},
+                    {"eventCategory":"all","eventLabel":"CONSTR","plan_type":"Openness","plan_desc":"My organization fosters openness to different perspectives.", "score":"0"},
+                    {"eventCategory":"all","eventLabel":"CONSTR","plan_type":"Conflict Management","plan_desc":"My organization resolves conflict rather than buries it.", "score":"20"},
+                    {"eventCategory":"all","eventLabel":"CONSTR","plan_type":"Nondiscriminatory Practices","plan_desc":"My organization does not make decisions based upon a person's identity.", "score":"15"}
+                ]
+                
+                initDefaults('by-1', ['industry','orgsize','region','states'])   // ('by-1', ['region','industry','orgsize'], 'benefitsPortal', 'healthcare', null, 'drilldown-tab1')
+                
+                console.timeEnd('Page load');
+            });
+        </script>
+
+        <style>
+            body {
+                font-family: "proxima nova", sans-serif;
+                font-weight: 400;
+            }
+            .btn-primary {
+                color: #fff;
+                background-color: #f26a42;
+                border-color: #f26a42;
+            }
+            .btn-primary:not(:disabled):not(.disabled).active, .btn-primary:not(:disabled):not(.disabled):active, .show>.btn-primary.dropdown-toggle {
+                color: #fff;
+                background-color: #f26a42;
+                border-color: #f26a42;
+            }
+            .row_title {
+                width: 100%;
+                font-size: 20pt;
+                font-weight: bold;
+            }
+            .row_desc {
+                width: 100%;
+                padding-bottom: 20px;
+            }
+            .row_scale_text {
+                position: relative; 
+                width: 100%; 
+                top: -44px; 
+                z-index: 0;
+            }
+            .row_scale_text_representative {
+                position: relative; 
+                top: -19px; 
+                z-index: 0; 
+                text-align: right;
+            }
+            .row_scale_text_not_representative {
+                position: relative; 
+                top: 5px; 
+                z-index: 0; 
+                text-align: left;
+            }
+            .row_score {
+                font-weight: bold;
+                width: 100%;
+                line-height: 3;
+                border: 1pt solid black;
+                margin-top: 13px;
+            }
+            .row_score_title {
+                font-weight: bold;
+                width: 100%; 
+                padding-top: 50px
+            }
+            .row_scale_hash_25 {
+                position: relative; 
+                width: 25%; 
+                line-height: .5; 
+                top: -20px; 
+                z-index: 0;
+            }
+            .row_scale_hash_50 {
+                position: relative; 
+                width: 50%; 
+                line-height: .5; 
+                top: -28px; 
+                z-index: 0;
+            }
+            .row_scale_hash_75 {
+                position: relative; 
+                width: 75%; 
+                line-height: .5; 
+                top: -36px; 
+                z-index: 0;
+            }
+            .row_scale_hash_100 {
+                position: relative; 
+                width: 100%; 
+                line-height: .5; 
+                top: -44px; 
+                z-index: 0;
+            }
+            .row_scale {
+                position: relative; 
+                width: 100%; 
+                top: -44px;
+                background-image: linear-gradient(to right, black, #f26a42);
+                background-image: linear-gradient(to right,#f26a42, #1A3B67);
+                height: 20px;
+                border-left: 1pt solid black !important;
+                border-right: 1pt solid black !important;
+            }
+            .row_scale_caret {
+                position: relative; 
+                top: 10px; 
+                z-index: 1; 
+                left: -11px; 
+                font-size: 24pt;
+            }
+            .hash_mark_top {
+                border-left: 1pt solid black !important;
+                border-right: 1pt solid black !important;
+            }
+            .hash_mark_bottom {
+                position: relative; 
+                width: 100%; 
+                top: -44px; 
+                line-height: .5;
+                border-left: 1pt solid black !important;
+                border-right: 1pt solid black !important;
+            }
+            .row {
+                border-bottom: 1pt solid silver;
+            }
+            .blackrow {
+                border-bottom: 1pt solid black !important;
+            }
+            .table td, .table th {
+                border-top: 1px solid white;
+                padding: 0px;
+            }
+            
+            .research_findings_prepare_for_export {
+                padding-right: 10px;
+            }
+
+            .research_findings {
+                remove_width: 100%;
+                remove_max-width: 1000px;
+                remove_margin-bottom: 20px;
+                remove_padding-left: 25px;
+                remove_padding-right: 25px;
+                remove_font-size: 14px;
+                remove_font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+            }
+
+            .dropdown-item {
+                font-weight: 500;
+            }
+
+            .hidden {
+                display: none !important;
+            }
+
+            .drilldown_footer {
+                font-weight: 400;
+                font-size: 11px;
+                text-decoration: none;
+                color: #888;
+                justify-content: space-between;
+                align-items: center;
+                text-align: center;
+                padding-left:25px;
+                width: 100%;
+            }
+
+            /*
+            a.nav-link {color: #333333;}
+
+            .nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active {color: #000000; font-weight: 500;}
+
+            .nav-tabs .nav-link {margin-top: 10px;}
+            */
+            .bootstrap-select {margin-top: 5px;}
+            
+            /*
+            @media screen and (max-width: 1000px) {
+                .nav_layer1{ display: contents; }
+                .nav_layer2{ display: none; }
+            }
+
+            @media screen and (min-width: 1000px) {
+                .remove_nav_layer1{ display: none; }
+                .remove_nav_layer2{ display: block; }
+                .nav_layer1{ display: contents; }
+                .nav_layer2{ display: none; }
+            }
+
+            
+            .bootstrap-select>.dropdown-toggle.bs-placeholder, .bootstrap-select>.dropdown-toggle.bs-placeholder:active, .bootstrap-select>.dropdown-toggle.bs-placeholder:focus, .bootstrap-select>.dropdown-toggle.bs-placeholder:hover {
+                color: #000;
+            }
+            */
+
+            @media not all and (min-resolution:.001dpcm) { 
+                @supports (-webkit-appearance:none) {
+                    .bootstrap-select {
+                        height: 35px;
+                        margin-bottom: 15px;
+                    }
+                }
+            }
+
+            
+        </style>
+        
+    </head>
+
+    <body>
+        <!-- Google Tag Manager (noscript) -->
+        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXX" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+        <!-- End Google Tag Manager (noscript) -->
+
+        <div class="container-fluid" style="background-color: black; text-align: center; color: white; padding-bottom: 10pt; margin-bottom: 10pt;">
+            <div class="row blackrow">
+                <div class="col-1">&nbsp;</div>
+                <div class="col-10">
+                    <span style="font-size: 36pt;">EMPATHY INDEX</span>
+                </div>
+                <div class="col-1">&nbsp;</div>
+            </div>
+            <div class="row blackrow">
+                <div class="col-1">&nbsp;</div>
+                <div class="col-10">
+                    <span style="font-size: 14pt;">With SHRM'S Empathy Index, you are given the power to measure where your organization stands on key components of an empathetic workplace. Using these scores, you are provided a window to explore which areas are strengths and which areas of empathetic opportunity exist to guide you on your organization's journey to create more empathetic workplaces.</span>
+                </div>
+                <div class="col-1">&nbsp;</div>
+            </div>
+            <div class="row blackrow">
+                <div class="col-1">&nbsp;</div>
+                <div class="col-10 nav_layer3">
+                    <select class="col-md-4 selectpicker-1" data-size="9" tabindex="-98">
+                        <option value="" data-val="all">All (Industries, Org Sizes, Regions)</option>
+                        <optgroup label="Industries">
+                            <option value="CONSTR">Construction</option>
+                            <option value="FINANCE">Financial Activities</option>
+                            <option value="GOVTEDU">Government &amp; Education</option>
+                            <option value="HLTHSS">Healthcare and Social Assistance</option>
+                            <option value="LSHOSP">Leisure &amp; Hospitality</option>
+                            <option value="MANFCT">Manufacturing</option>
+                            <option value="OTHER">Other</option>
+                            <option value="OTHSERV">Other Services</option>
+                            <option value="PROFBUS">Professional &amp; Business Services</option>
+                            <option value="R_W_T_U">Retail, Wholesale, Transport, Utilities</option>
+                        </optgroup>
+                        <optgroup label="Orgsizes">
+                            <option value="SM">1-99</option>
+                            <option value="MD">100-499</option>
+                            <option value="LG">500-4999</option>
+                            <option value="XL">5000+</option>
+                        </optgroup>
+                        <optgroup label="Regions">
+                            <option value="M">Midwest</option>
+                            <option value="NE">Northeast</option>
+                            <option value="S">South</option>
+                            <option value="W">West</option>
+                        </optgroup>
+                    </select>
+
+                    <div oclass="col-md-4" style="display:inline-block">
+                        <button type="button" class="btn btn-primary btn-sm btn-filter hidden"><span class="fas fa-filter" aria-hidden="true"></span> Filter </button>
+                        <button id="spinner" class="btn btn-primary hidden" type="button" style="font-size:14px;width: 92.08px;" disabled>
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        </button>
+                        <div class="btn-group" role="group">
+                            <button id="btnExportGroup" type="button" class="btn btn-primary dropdown-toggle btn-sm btn-export" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="width: 92.08px;">
+                                Export
+                            </button>
+                            <div class="dropdown-menu" aria-labelledby="btnExportGroup">
+                                <a class="dropdown-item export_as export_as_csv" alt-href='CSV' href="#">as CSV</a>
+                                <a class="dropdown-item export_as export_as_image" alt-href='Image' href="#">as Image</a>
+                                <a class="dropdown-item export_as export_as_pdf" alt-href='PDF' href="#">as PDF</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-1">&nbsp;</div>
+            </div>
+        </div>
+
+        <div class="drilldown research_findings_outer" id="drilldown_empathy_2021">
+            <div class="hidden">
+                <ul class="onav onav-tabs" oid="tabs" orole="tablist" data-bind="foreach: SHRM.utils.tabs">
+                    <li class="onav-item">
+                        <a class="onav-link" data-bind="text: name, attr: {id: id, href: '#' + id, categoryCode: eventCategory}" data-toggle="tab"role="tab" aria-controls="home" aria-selected="true"></a>
+                    </li>
+                </ul>
+                <table class="research_findings">
+                    <thead>
+                        <th>THEME</th><th>SCORE</th>
+                    </thead>
+                    <tbody data-bind="foreach: filtered_results">
+                        <tr><td data-bind="text: plan_type"></td><td data-bind="text: score"></td></tr>
+                    </tbody>
+                </table>    
+            </div>
+            
+            <div class="container-fluid"  data-bind="foreach: filtered_results">
+                <div class="row">
+                    <div class="col-10">
+                        <div class="row_title" data-bind="text: plan_type"></div>
+                        <div class="row_desc" data-bind="text: plan_desc"></div>
+                        <div style="position: relative; width: 100%; top: 0px">
+                            <table class="table">
+                                <tr style="width: 100%;">
+                                    <td style="width: 33%; text-align: left;"><b>0</b></td>
+                                    <td style="width: 33%; text-align: center;"><b>10</b></td>
+                                    <td style="width: 33%; text-align: right;"><b>20</b></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="row_scale_hash_25 hash_mark_top">&nbsp;</div>
+                        <div class="row_scale_hash_50 hash_mark_top">&nbsp;</div>
+                        <div class="row_scale_hash_75 hash_mark_top">&nbsp;</div>
+                        <div class="row_scale_hash_100 hash_mark_top">&nbsp;</div>
+                        <div class="row_scale">
+                            <span class="row_scale_caret fas fa-caret-up">&nbsp;</span>
+                        </div>
+                        <div class="hash_mark_bottom">&nbsp;</div>
+                        <div class="row_scale_text">
+                            <div class="row_scale_text_not_representative">Not Representative</div>
+                            <div class="row_scale_text_representative">Completely Representative</div>
+                        </div>
+                    </div>
+                    <div class="col-2" style="text-align: center;">
+                        <div class="row_score_title">SCORE</div>
+                        <div class="row_score" style="display: none;" data-bind="text: score"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12 drilldown_footer">Data: &#169; 2021 Society for Human Resource Management &middot; Source: Empathy Index 2021</div>
+                </div>
+            </div>
+        </div>
+
+        <iframe id="gtm" src="about:blank" ostyle="display:none" class='hidden'></iframe>
+    </body>
+</html> 

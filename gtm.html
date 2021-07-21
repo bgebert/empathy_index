@@ -1,0 +1,83 @@
+<html>
+    <head>
+        <!-- Google Tag Manager -->
+        <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-N6W5WC');</script>
+        <!-- End Google Tag Manager -->
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+        <script>
+            function getUrlParameter(sParam) {
+                var sPageURL = window.location.search.substring(1),
+                    sURLVariables = sPageURL.split('&'),
+                    sParameterName,
+                    i;
+
+                for (i = 0; i < sURLVariables.length; i++) {
+                    sParameterName = sURLVariables[i].split('=');
+
+                    if (sParameterName[0] === sParam) {
+                        return typeof sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+                    }
+                }
+                return false;
+            };
+
+            function pushToGTM(){
+                if (window.dataLayer){
+                    var event = getUrlParameter('event')
+                    var eventCategory = getUrlParameter('eventCategory')
+                    var eventLabel = getUrlParameter('eventLabel')
+                    var eventAction = getUrlParameter('eventAction')
+                    var eventValue = getUrlParameter('eventValue')
+                    if (eventAction){
+                        $('#event').text(event)
+                        $('#eventCategory').text(eventCategory)
+                        $('#eventLabel').text(eventLabel)
+                        $('#eventAction').text(eventAction)
+                        $('#eventValue').text(eventValue)
+                        window.dataLayer.push({            
+                            'event': event,            
+                            'eventCategory': eventCategory,            
+                            'eventLabel': eventLabel,
+                            'eventAction': eventAction,            
+                            'eventValue': eventValue          
+                        });
+                    }else{
+                        $('#event').text(event)
+                        $('#eventCategory').text(eventCategory)
+                        $('#eventLabel').text(eventLabel)
+                        $('#eventValue').text(eventValue)
+                        window.dataLayer.push({            
+                            'event': event,            
+                            'eventCategory': eventCategory,            
+                            'eventLabel': eventLabel,            
+                            'eventValue': eventValue          
+                        });
+                    }
+                }
+            }
+
+            $(document).ready(function() {
+                window.dataLayer = window.dataLayer || [];
+                pushToGTM()
+            });
+        </script>
+    </head>
+    <body>
+        <!-- Google Tag Manager (noscript) -->
+        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXX" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+        <!-- End Google Tag Manager (noscript) -->
+        <table>
+            <tr><td><b>event: </b></td><td id="event"></td></tr>
+            <tr><td><b>eventCategory: </b></td><td id="eventCategory"></td></tr>
+            <tr><td><b>eventLabel: </b></td><td id="eventLabel"></td></tr>
+            <tr><td><b>eventAction: </b></td><td id="eventAction"></td></tr>
+            <tr><td><b>eventValue: </b></td><td id="eventValue"></td></tr>
+        </table>
+    </body>
+</html>

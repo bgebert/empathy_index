@@ -1,0 +1,7 @@
+json_tabledata = [
+{"eventCategory":"all","eventLabel":"all","plan_type":"Benefits", "score":"15"},
+{"eventCategory":"all","eventLabel":"all","plan_type":"Inclusion", "score":"14"},
+{"eventCategory":"all","eventLabel":"all","plan_type":"Openness", "score":"13"},
+{"eventCategory":"all","eventLabel":"all","plan_type":"Conflict_Management", "score":"18"},
+{"eventCategory":"all","eventLabel":"all","plan_type":"Nondiscriminatory_Practices", "score":"5"}
+]
