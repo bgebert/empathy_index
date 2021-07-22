@@ -785,6 +785,7 @@
                     SHRM.utils.loadScript("https://cdn.jsdelivr.net/npm/html2canvas@1.0.0-rc.7/dist/html2canvas.min.js")
                         .then(() => {
                             // add class to resize div
+                            
                             $('.research_findings_outer').addClass("research_findings_prepare_for_export")
                             $(window).trigger('resize')
                             
@@ -811,7 +812,7 @@
                                 
                                 SHRM.utils.sleep(2000).then(() => { showSpinner(false); });
                             });
-                                    
+                            
                             //alert($( event.target ).attr('alt-href'))
                             SHRM.utils.pageConfig.exportType = $( event.target ).attr('alt-href')
                             pushToGTM()
@@ -885,11 +886,11 @@
                 });
                          
                 $('.export_as').on('mouseover', function(event) {
-                    $( event.target ).attr('href', buildURL() + '/' + $( event.target ).attr('alt-href'))
+                    //$( event.target ).attr('href', buildURL() + '/' + $( event.target ).attr('alt-href'))
                 } );
 
                 $('.export_as').on('mouseout', function(event) {
-                    $( event.target ).attr('href', '#')
+                    //$( event.target ).attr('href', '#')
                 } );
 
                 SHRM.utils.dataObj = []
@@ -1230,9 +1231,9 @@
                                 Export
                             </button>
                             <div class="dropdown-menu" aria-labelledby="btnExportGroup">
-                                <a class="dropdown-item export_as export_as_csv" alt-href='CSV' href="#">as CSV</a>
-                                <a class="dropdown-item export_as export_as_image" alt-href='Image' href="#">as Image</a>
-                                <a class="dropdown-item export_as export_as_pdf" alt-href='PDF' href="#">as PDF</a>
+                                <a class="dropdown-item export_as export_as_csv" alt-href='CSV' ohref="#">as CSV</a>
+                                <a class="dropdown-item export_as export_as_image" alt-href='Image' ohref="#">as Image</a>
+                                <a class="dropdown-item export_as export_as_pdf" alt-href='PDF' ohref="#">as PDF</a>
                             </div>
                         </div>
                     </div>
