@@ -525,11 +525,8 @@
 
                 $( window ).resize(function() {
                     $('.row_score').each(function () {
-                    row_score_value = parseFloat($(this).text())
+                    row_score_value = parseInt($(this).text())
                     row_score_value_max = 20
-                    if ($(this).hasClass('grand_total')) {
-                        row_score_value_max = 100
-                    }
                     row_scale_width = $(this).parent().parent().find('.row_scale').width()  // 799.34376
                     row_scale_caret_left = $(this).parent().parent().find('.row_scale_caret').position().left // -10.999994999999998
                     row_scale_caret_left_zero = -11
@@ -565,11 +562,8 @@
                     }
 
                     $('.row_score').each(function () {
-                        row_score_value = parseFloat($(this).text())
+                        row_score_value = parseInt($(this).text())
                         row_score_value_max = 20
-                        if ($(this).hasClass('grand_total')) {
-                            row_score_value_max = 100
-                        }
                         row_scale_width = $(this).parent().parent().find('.row_scale').width()  // 799.34376
                         row_scale_caret_left = $(this).parent().parent().find('.row_scale_caret').position().left // -10.999994999999998
                         row_scale_caret_left_zero = -11
@@ -920,15 +914,16 @@
 
  
                 json_tabledata = [
-                    {"eventCategory":"all","eventLabel":"all","v1":"13.72","v2":"12.36","v3":"12.89","v4":"12.42","v5":"13.99","total":"65.36"},
-                    {"eventCategory":"all","eventLabel":"NE","v1":"13.83","v2":"12.43","v3":"12.99","v4":"12.45","v5":"14.07","total":"65.75"},
-                    {"eventCategory":"all","eventLabel":"M","v1":"13.58","v2":"12.18","v3":"12.76","v4":"11.93","v5":"13.78","total":"64.21"},
-                    {"eventCategory":"all","eventLabel":"S","v1":"13.51","v2":"12.26","v3":"12.67","v4":"12.57","v5":"13.86","total":"64.84"},
-                    {"eventCategory":"all","eventLabel":"W","v1":"14.09","v2":"12.65","v3":"13.3","v4":"12.68","v5":"14.33","total":"67.07"},
-                    {"eventCategory":"all","eventLabel":"SM","v1":"13.81","v2":"11.89","v3":"12.79","v4":"12.46","v5":"14.23","total":"65.13"},
-                    {"eventCategory":"all","eventLabel":"MD","v1":"13.56","v2":"12.43","v3":"12.67","v4":"12.25","v5":"13.46","total":"64.37"},
-                    {"eventCategory":"all","eventLabel":"LG","v1":"13.03","v2":"12.52","v3":"12.56","v4":"11.89","v5":"13.49","total":"63.59"},
-                    {"eventCategory":"all","eventLabel":"XL","v1":"13.98","v2":"13.75","v3":"13.73","v4":"12.84","v5":"14.25","total":"68.55"}
+                    {"eventCategory":"all","eventLabel":"all","plan_type":"Benefits","plan_desc":"My organization provides a sense of belonging to all staff.", "score":"15"},
+                    {"eventCategory":"all","eventLabel":"all","plan_type":"Inclusion","plan_desc":"My organization demands inclusion.", "score":"14"},
+                    {"eventCategory":"all","eventLabel":"all","plan_type":"Openness","plan_desc":"My organization fosters openness to different perspectives.", "score":"13"},
+                    {"eventCategory":"all","eventLabel":"all","plan_type":"Conflict Management","plan_desc":"My organization resolves conflict rather than buries it.", "score":"18"},
+                    {"eventCategory":"all","eventLabel":"all","plan_type":"Nondiscriminatory Practices","plan_desc":"My organization does not make decisions based upon a person's identity.", "score":"5"},
+                    {"eventCategory":"all","eventLabel":"CONSTR","plan_type":"Benefits","plan_desc":"My organization provides a sense of belonging to all staff.", "score":"18"},
+                    {"eventCategory":"all","eventLabel":"CONSTR","plan_type":"Inclusion","plan_desc":"My organization demands inclusion.", "score":"19"},
+                    {"eventCategory":"all","eventLabel":"CONSTR","plan_type":"Openness","plan_desc":"My organization fosters openness to different perspectives.", "score":"0"},
+                    {"eventCategory":"all","eventLabel":"CONSTR","plan_type":"Conflict Management","plan_desc":"My organization resolves conflict rather than buries it.", "score":"20"},
+                    {"eventCategory":"all","eventLabel":"CONSTR","plan_type":"Nondiscriminatory Practices","plan_desc":"My organization does not make decisions based upon a person's identity.", "score":"15"}
                 ]
                 
                 initDefaults('by-1', ['industry','orgsize','region','states'])   // ('by-1', ['region','industry','orgsize'], 'benefitsPortal', 'healthcare', null, 'drilldown-tab1')
@@ -941,10 +936,6 @@
             body {
                 font-family: "proxima nova", sans-serif;
                 font-weight: 400;
-            }
-            img {
-                width: 100%;
-                height: auto;
             }
             .btn-primary {
                 color: #fff;
@@ -1061,36 +1052,6 @@
             .table td, .table th {
                 border-top: 1px solid white;
                 padding: 0px;
-            }
-            .empathy_total {
-                background-color: black;
-                color: white;
-            }
-            .empathy_total .hash_mark_top {
-                border-left: 1pt solid white !important;
-                border-right: 1pt solid white !important;
-            }
-            .empathy_total .hash_mark_bottom {
-                border-left: 1pt solid white !important;
-                border-right: 1pt solid white !important;
-            }
-            .empathy_total .row_scale {
-                background-image: linear-gradient(to right,#f26a42, #1A3B67);
-                border-left: 1pt solid white !important;
-                border-right: 1pt solid white !important;
-            }
-            .empathy_total .row_scale_caret {
-                color: white;
-            }
-            .empathy_total td, .empathy_total th {
-                border-top: 1px solid black;
-                color: white;
-            }
-            .empathy_total .row_score {
-                border: 1pt solid white;
-            }
-            .empathy_total .row_score_title {
-                padding-top: 10px
             }
             
             .research_findings_prepare_for_export {
@@ -1209,8 +1170,8 @@
                         <optgroup label="Orgsizes">
                             <option value="SM">1-99</option>
                             <option value="MD">100-499</option>
-                            <option value="LG">500-999</option>
-                            <option value="XL">1000+</option>
+                            <option value="LG">500-4999</option>
+                            <option value="XL">5000+</option>
                         </optgroup>
                         <optgroup label="Regions">
                             <option value="M">Midwest</option>
@@ -1253,12 +1214,7 @@
                         <th>THEME</th><th>SCORE</th>
                     </thead>
                     <tbody data-bind="foreach: filtered_results">
-                        <tr><td>Benefits</td><td data-bind="text: v1"></td></tr>
-                        <tr><td>Inclusion</td><td data-bind="text: v2"></td></tr>
-                        <tr><td>Openness</td><td data-bind="text: v3"></td></tr>
-                        <tr><td>Conflict Management</td><td data-bind="text: v4"></td></tr>
-                        <tr><td>Nondiscriminatory Practices</td><td data-bind="text: v5"></td></tr>
-                        <tr><td>Total</td><td data-bind="text: total"></td></tr>
+                        <tr><td data-bind="text: plan_type"></td><td data-bind="text: score"></td></tr>
                     </tbody>
                 </table>    
             </div>
@@ -1266,8 +1222,8 @@
             <div class="container-fluid"  data-bind="foreach: filtered_results">
                 <div class="row">
                     <div class="col-10">
-                        <div class="row_title">Benefits</div>
-                        <div class="row_desc">My organization provides a sense of belonging to all staff.</div>
+                        <div class="row_title" data-bind="text: plan_type"></div>
+                        <div class="row_desc" data-bind="text: plan_desc"></div>
                         <div style="position: relative; width: 100%; top: 0px">
                             <table class="table">
                                 <tr style="width: 100%;">
@@ -1292,165 +1248,9 @@
                     </div>
                     <div class="col-2" style="text-align: center;">
                         <div class="row_score_title">SCORE</div>
-                        <div class="row_score" style="display: none;" data-bind="text: v1"></div>
+                        <div class="row_score" style="display: none;" data-bind="text: score"></div>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-10">
-                        <div class="row_title">Inclusion</div>
-                        <div class="row_desc">My organization demands inclusion.</div>
-                        <div style="position: relative; width: 100%; top: 0px">
-                            <table class="table">
-                                <tr style="width: 100%;">
-                                    <td style="width: 33%; text-align: left;"><b>0</b></td>
-                                    <td style="width: 33%; text-align: center;"><b>10</b></td>
-                                    <td style="width: 33%; text-align: right;"><b>20</b></td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div class="row_scale_hash_25 hash_mark_top">&nbsp;</div>
-                        <div class="row_scale_hash_50 hash_mark_top">&nbsp;</div>
-                        <div class="row_scale_hash_75 hash_mark_top">&nbsp;</div>
-                        <div class="row_scale_hash_100 hash_mark_top">&nbsp;</div>
-                        <div class="row_scale">
-                            <span class="row_scale_caret fas fa-caret-up">&nbsp;</span>
-                        </div>
-                        <div class="hash_mark_bottom">&nbsp;</div>
-                        <div class="row_scale_text">
-                            <div class="row_scale_text_not_representative">Not Representative</div>
-                            <div class="row_scale_text_representative">Completely Representative</div>
-                        </div>
-                    </div>
-                    <div class="col-2" style="text-align: center;">
-                        <div class="row_score_title">SCORE</div>
-                        <div class="row_score" style="display: none;" data-bind="text: v2"></div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-10">
-                        <div class="row_title">Openness</div>
-                        <div class="row_desc">My organization fosters openness to different perspectives.</div>
-                        <div style="position: relative; width: 100%; top: 0px">
-                            <table class="table">
-                                <tr style="width: 100%;">
-                                    <td style="width: 33%; text-align: left;"><b>0</b></td>
-                                    <td style="width: 33%; text-align: center;"><b>10</b></td>
-                                    <td style="width: 33%; text-align: right;"><b>20</b></td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div class="row_scale_hash_25 hash_mark_top">&nbsp;</div>
-                        <div class="row_scale_hash_50 hash_mark_top">&nbsp;</div>
-                        <div class="row_scale_hash_75 hash_mark_top">&nbsp;</div>
-                        <div class="row_scale_hash_100 hash_mark_top">&nbsp;</div>
-                        <div class="row_scale">
-                            <span class="row_scale_caret fas fa-caret-up">&nbsp;</span>
-                        </div>
-                        <div class="hash_mark_bottom">&nbsp;</div>
-                        <div class="row_scale_text">
-                            <div class="row_scale_text_not_representative">Not Representative</div>
-                            <div class="row_scale_text_representative">Completely Representative</div>
-                        </div>
-                    </div>
-                    <div class="col-2" style="text-align: center;">
-                        <div class="row_score_title">SCORE</div>
-                        <div class="row_score" style="display: none;" data-bind="text: v3"></div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-10">
-                        <div class="row_title">Conflict Management</div>
-                        <div class="row_desc">My organization resolves conflict rather than buries it.</div>
-                        <div style="position: relative; width: 100%; top: 0px">
-                            <table class="table">
-                                <tr style="width: 100%;">
-                                    <td style="width: 33%; text-align: left;"><b>0</b></td>
-                                    <td style="width: 33%; text-align: center;"><b>10</b></td>
-                                    <td style="width: 33%; text-align: right;"><b>20</b></td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div class="row_scale_hash_25 hash_mark_top">&nbsp;</div>
-                        <div class="row_scale_hash_50 hash_mark_top">&nbsp;</div>
-                        <div class="row_scale_hash_75 hash_mark_top">&nbsp;</div>
-                        <div class="row_scale_hash_100 hash_mark_top">&nbsp;</div>
-                        <div class="row_scale">
-                            <span class="row_scale_caret fas fa-caret-up">&nbsp;</span>
-                        </div>
-                        <div class="hash_mark_bottom">&nbsp;</div>
-                        <div class="row_scale_text">
-                            <div class="row_scale_text_not_representative">Not Representative</div>
-                            <div class="row_scale_text_representative">Completely Representative</div>
-                        </div>
-                    </div>
-                    <div class="col-2" style="text-align: center;">
-                        <div class="row_score_title">SCORE</div>
-                        <div class="row_score" style="display: none;" data-bind="text: v4"></div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-10">
-                        <div class="row_title">Nondiscriminatory Practices</div>
-                        <div class="row_desc">My organization does not make decisions based upon a person's identity.</div>
-                        <div style="position: relative; width: 100%; top: 0px">
-                            <table class="table">
-                                <tr style="width: 100%;">
-                                    <td style="width: 33%; text-align: left;"><b>0</b></td>
-                                    <td style="width: 33%; text-align: center;"><b>10</b></td>
-                                    <td style="width: 33%; text-align: right;"><b>20</b></td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div class="row_scale_hash_25 hash_mark_top">&nbsp;</div>
-                        <div class="row_scale_hash_50 hash_mark_top">&nbsp;</div>
-                        <div class="row_scale_hash_75 hash_mark_top">&nbsp;</div>
-                        <div class="row_scale_hash_100 hash_mark_top">&nbsp;</div>
-                        <div class="row_scale">
-                            <span class="row_scale_caret fas fa-caret-up">&nbsp;</span>
-                        </div>
-                        <div class="hash_mark_bottom">&nbsp;</div>
-                        <div class="row_scale_text">
-                            <div class="row_scale_text_not_representative">Not Representative</div>
-                            <div class="row_scale_text_representative">Completely Representative</div>
-                        </div>
-                    </div>
-                    <div class="col-2" style="text-align: center;">
-                        <div class="row_score_title">SCORE</div>
-                        <div class="row_score" style="display: none;" data-bind="text: v5"></div>
-                    </div>
-                </div>
-                <div class="row empathy_total">
-                    <div class="col-10">
-                        <div class="row_title"><img style="width:26px" src="./Arrow_Melon.png"></img> Empathy</div>
-                        <div class="row_desc hidden">&nbsp;</div>
-                        <div style="position: relative; width: 100%; top: 0px">
-                            <table class="table">
-                                <tr style="width: 100%;">
-                                    <td style="width: 33%; text-align: left;"><b>0</b></td>
-                                    <td style="width: 33%; text-align: center;"><b>50</b></td>
-                                    <td style="width: 33%; text-align: right;"><b>100</b></td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div class="row_scale_hash_25 hash_mark_top">&nbsp;</div>
-                        <div class="row_scale_hash_50 hash_mark_top">&nbsp;</div>
-                        <div class="row_scale_hash_75 hash_mark_top">&nbsp;</div>
-                        <div class="row_scale_hash_100 hash_mark_top">&nbsp;</div>
-                        <div class="row_scale">
-                            <span class="row_scale_caret fas fa-caret-up">&nbsp;</span>
-                        </div>
-                        <div class="hash_mark_bottom">&nbsp;</div>
-                        <div class="row_scale_text">
-                            <div class="row_scale_text_not_representative">Not Representative</div>
-                            <div class="row_scale_text_representative">Completely Representative</div>
-                        </div>
-                    </div>
-                    <div class="col-2" style="text-align: center;">
-                        <div class="row_score_title">EMPATHY SCORE</div>
-                        <div class="row_score grand_total" style="display: none;" data-bind="text: total"></div>
-                    </div>
-                </div>
-                
             </div>
 
             <div class="container-fluid">
