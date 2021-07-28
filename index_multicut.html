@@ -91,7 +91,7 @@
                 };
 
                 this.configureDropDowns = function (dataObj, key, selectObj, optgroup_label) {
-                    //debugger
+                    debugger
                     result = this.getDistinctVals(dataObj, key).filter(function(e) { return e !== '' })
                     var $optgroup = selectObj
                     if (optgroup_label){
@@ -253,6 +253,7 @@
 
             function initDrillDown(objContainter){
                 if (SHRM.utils.selectPickersLoaded === undefined){
+                    debugger
                     var configKeys = SHRM.utils.tabs.find(tab => tab.name === SHRM.utils.pageConfig.categoryText)["data-val-config-keys"]
                     var configPath = SHRM.utils.tabs.find(tab => tab.name === SHRM.utils.pageConfig.categoryText)["data-val-config-path"]
                     var filterBy = SHRM.utils.tabs.find(tab => tab.name === SHRM.utils.pageConfig.categoryText)["data-val-filterby"]
@@ -590,7 +591,7 @@
                 });
 
                 $(document).on('shown.bs.tab', function (event) {
-                    //debugger
+                    debugger
                     var arrHREF = $(event.target).prop('href').split('#')
                     var url = ''
                     if (arrHREF.length == 2){
@@ -606,8 +607,17 @@
                         if (SHRM.utils.pageConfig.selectpicker_1){
                             $('.selectpicker-1').val(SHRM.utils.pageConfig.selectpicker_1)
                             $(".selectpicker-1 option[value='" + SHRM.utils.pageConfig.selectpicker_1 + "']").prop("selected", true);
-                            //obj.find('.filter-option-inner-inner').text($(".selectpicker-1 option[value='" + SHRM.utils.pageConfig.selectpicker_1 + "']").text())
                             $('.nav_layer3').find('.filter-option-inner-inner').text($('.selectpicker-1 option:selected').text())
+                        }
+                        if (SHRM.utils.pageConfig.selectpicker_2){
+                            $('.selectpicker-2').val(SHRM.utils.pageConfig.selectpicker_2)
+                            $(".selectpicker-2 option[value='" + SHRM.utils.pageConfig.selectpicker_2 + "']").prop("selected", true);
+                            $('.nav_layer3').find('.filter-option-inner-inner').text($('.selectpicker-2 option:selected').text())
+                        }
+                        if (SHRM.utils.pageConfig.selectpicker_3){
+                            $('.selectpicker-3').val(SHRM.utils.pageConfig.selectpicker_3)
+                            $(".selectpicker-3 option[value='" + SHRM.utils.pageConfig.selectpicker_3 + "']").prop("selected", true);
+                            $('.nav_layer3').find('.filter-option-inner-inner').text($('.selectpicker-3 option:selected').text())
                         }
                         $('.btn-filter').trigger('click')
                         $('.selectpicker').focus()
@@ -618,6 +628,7 @@
                 });
 
                 $(document).on('show.bs.tab', function (event) {
+                    debugger
                     SHRM.utils.pageConfig.categoryText = $( event.target ).text()
                     SHRM.utils.pageConfig.categoryCode = $( event.target ).attr('categoryCode')
                     SHRM.utils.pageConfig.categoryType = $( event.target ).attr('href')
@@ -629,9 +640,22 @@
                     }else{
                         $('.selectpicker-1').addClass('selectpicker')
                     }
+                    if ($('.selectpicker-2').hasClass('selectpicker')){
+                        // This is being done because of a timing issue that caused the drop down to not display properly
+                        // Basically, it wasn't fully loaded before the styling was finished
+                    }else{
+                        $('.selectpicker-2').addClass('selectpicker')
+                    }
+                    if ($('.selectpicker-3').hasClass('selectpicker')){
+                        // This is being done because of a timing issue that caused the drop down to not display properly
+                        // Basically, it wasn't fully loaded before the styling was finished
+                    }else{
+                        $('.selectpicker-3').addClass('selectpicker')
+                    }
                 });
                 
                 $('.selectpicker-1').on('change', function (event) {
+                    debugger
                     //var objContainter = $( event.target ).closest('.tab-pane');
                     //debugger
                     var filterBy = 'by-1'
@@ -668,6 +692,7 @@
                 });
 
                 $('.selectpicker-2').on('change', function (event) {
+                    debugger
                     var arrConfigKeys = SHRM.utils.pageConfig.configKeys;
                     var configKeys = SHRM.utils.tabs.find(tab => tab.name === SHRM.utils.pageConfig.categoryText)["data-val-config-keys"]
                     var filterBy = SHRM.utils.tabs.find(tab => tab.name === SHRM.utils.pageConfig.categoryText)["data-val-filterby"]
@@ -690,6 +715,7 @@
                 });
 
                 $('.selectpicker-3').on('change', function (event) {
+                    debugger
                     var filterBy = SHRM.utils.tabs.find(tab => tab.name === SHRM.utils.pageConfig.categoryText)["data-val-filterby"]
 
                     if (filterBy == 'by-all'){
@@ -942,7 +968,7 @@
                     {"eventCategory":"all","eventLabel":"OTHER","v1":"14.46","v2":"13.26","v3":"13.17","v4":"12.59","v5":"14.56","total":"67.94"}
                 ]
                 
-                initDefaults('by-1', ['industry','orgsize','region','states'])   // ('by-1', ['region','industry','orgsize'], 'benefitsPortal', 'healthcare', null, 'drilldown-tab1')
+                initDefaults('by-all', ['industry','orgsize','region'])   // ('by-1', ['region','industry','orgsize'], 'benefitsPortal', 'healthcare', null, 'drilldown-tab1')
                 
                 console.timeEnd('Page load');
             });
@@ -1207,10 +1233,9 @@
                 <div class="col-1">&nbsp;</div>
             </div>
             <div class="row blackrow">
-                <div class="col-1">&nbsp;</div>
-                <div class="col-10 nav_layer3">
-                    <select class="col-md-4 selectpicker-1" data-size="9" tabindex="-98">
-                        <option value="" data-val="all">All (Industries, Org Sizes, Regions)</option>
+                <div class="col-12 nav_layer3">
+                    <select class="col-md-3 selectpicker-1" data-size="9" tabindex="-98">
+                        <option value="" data-val="all">All Industries</option>
                         <optgroup label="Industries">
                             <option value="LSHOSP">Accommodation &amp; Food Service, Arts, Entertainment, Recreation</option>
                             <option value="OTHSERV">Administrative Support, Other Services</option>
@@ -1223,12 +1248,18 @@
                             <option value="PROFBUS">Professional, Scientific, Technical Services</option>
                             <option value="R_W_T_U">Retail, Wholesale, Transport, Utilities</option>
                         </optgroup>
+                    </select>
+                    <select class="col-md-3 selectpicker-2" data-size="9" tabindex="-98">
+                        <option value="" data-val="all">All Org Sizes</option>
                         <optgroup label="Orgsizes">
                             <option value="SM">1-99</option>
                             <option value="MD">100-499</option>
                             <option value="LG">500-999</option>
                             <option value="XL">1000+</option>
                         </optgroup>
+                    </select>
+                    <select class="col-md-3 selectpicker-3" data-size="9" tabindex="-98">
+                        <option value="" data-val="all">All Regions</option>
                         <optgroup label="Regions">
                             <option value="M">Midwest</option>
                             <option value="NE">Northeast</option>
@@ -1237,7 +1268,7 @@
                         </optgroup>
                     </select>
 
-                    <div oclass="col-md-4" style="display:inline-block">
+                    <div oclass="col-md-3" style="display:inline-block">
                         <button type="button" class="btn btn-primary btn-sm btn-filter hidden"><span class="fas fa-filter" aria-hidden="true"></span> Filter </button>
                         <button id="spinner" class="btn btn-primary hidden" type="button" style="font-size:14px;width: 92.08px;" disabled>
                             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -1254,7 +1285,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-1">&nbsp;</div>
             </div>
         </div>
 
@@ -1270,7 +1300,7 @@
                         <th>THEME</th><th>SCORE</th>
                     </thead>
                     <tbody data-bind="foreach: filtered_results">
-                        <tr><td>Belonging</td><td data-bind="text: v1"></td></tr>
+                        <tr><td>Benefits</td><td data-bind="text: v1"></td></tr>
                         <tr><td>Inclusion</td><td data-bind="text: v2"></td></tr>
                         <tr><td>Openness</td><td data-bind="text: v3"></td></tr>
                         <tr><td>Conflict Management</td><td data-bind="text: v4"></td></tr>
@@ -1283,7 +1313,7 @@
             <div class="container-fluid"  data-bind="foreach: filtered_results">
                 <div class="row">
                     <div class="col-10">
-                        <div class="row_title">Belonging</div>
+                        <div class="row_title">Benefits</div>
                         <div class="row_desc">My organization provides a sense of belonging to all staff.</div>
                         <div style="position: relative; width: 100%; top: 0px">
                             <table class="table">
