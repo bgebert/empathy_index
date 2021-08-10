@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "Launch Chrome against localhost",
             "file_remove": "/Users/bgebert/Sites/empathy_index/index.html",
-            "url": "http://localhost:8080/index.html",
+            "url": "http://localhost:8080/index_multicut.html",
             "webRoot": "${workspaceFolder}"
         }
     ]
