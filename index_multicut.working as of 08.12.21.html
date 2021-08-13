@@ -42,7 +42,7 @@
                             if (filtered_by){
                                 filtered_by = filtered_by.filter(a => eval('a.' + key) == value);
                             }else{
-                                filtered_by_category = SHRM.utils.data.tabledata.filter(a => a.category == $('.navpicker').find( "option:selected" ).attr('json_category'));
+                                filtered_by_category = SHRM.utils.data.tabledata.filter(a => a.eventCategory == SHRM.utils.pageConfig.categoryCode)
                                 filtered_by = filtered_by_category.filter(a => eval('a.' + key) == value);
                             }
                         }
@@ -50,15 +50,13 @@
                     if (filtered_by){
                         console.log('filterJSON results: ' + filtered_by.length)    
                     }
-                    //debugger
-                    //alert('filterJSON: ' + $('.navpicker').find( "option:selected" ).attr('json_category'))
-                    
+                    alert('filterJSON: ' + SHRM.utils.pageConfig.categoryCode)
                     return filtered_by
                 };
 
                 this.filterSelects = function(event = null){
                     var current_key = $( event.target ).find('.filterable').attr('data-key')
-                    var tabledata = SHRM.utils.data.tabledata.filter(a => a.category == $('.navpicker').find( "option:selected" ).attr('json_category'));
+                    var tabledata = SHRM.utils.data.tabledata.filter(a => a.eventCategory == SHRM.utils.pageConfig.categoryCode);
                     
                     $('.filterable').each(function() {
                         if ($(this).attr('data-filterable')){
@@ -76,9 +74,7 @@
                             }
                         }
                     });
-                    //debugger
-                    //alert('filterSelects: ' + $('.navpicker').find( "option:selected" ).attr('json_category'))
-                    
+                    alert('filterSelects: ' + SHRM.utils.pageConfig.categoryCode)
                     //get list of available dropdown options for selected filterable select
                     var setOptions = new Set()
                     
@@ -207,7 +203,7 @@
                 }
         
                 this.buildURL = function(){
-                    url = '#/' + SHRM.utils.pageConfig.TopLevelType + '/' + SHRM.utils.pageConfig.tabGroup
+                    url = '#/' + SHRM.utils.pageConfig.TopLevelType + '/' + SHRM.utils.pageConfig.SubLevelType
                     
                     var eventAction = ''
                     $('.filterable').each(function() {
@@ -223,8 +219,8 @@
                             
                         }
                     });
-                    
-                    url = url + '/' + $('.navpicker').find( "option:selected" ).attr('tab_id')
+
+                    url = url + '/' + SHRM.utils.pageConfig.categoryType.replace('#','')
                     url = url + '/' + eventAction
                     if (SHRM.utils.pageConfig.exportType){
                         url = url + '/' + SHRM.utils.pageConfig.exportType
@@ -241,9 +237,10 @@
                 }
 
                 this.pushToGTM = function(){
+                    debugger
                     var event = 'GAEvent'
                     var eventLabel = SHRM.utils.pageConfig.TopLevelType
-                    var eventCategory = SHRM.utils.pageConfig.tabGroup + " | " + $('.navpicker').find( "option:selected" ).text()
+                    var eventCategory = SHRM.utils.pageConfig.SubLevelType + " | " + SHRM.utils.pageConfig.categoryText
                     var eventAction = ''
                     var eventValue = SHRM.utils.pageConfig.exportType
 
@@ -300,44 +297,45 @@
             }).apply(SHRM.utils);
 
             //Local functions
-            function initDefaults(bUpdateURL, filterBy, TopLevelType = null, startingTabGroup = null){
+            function initDefaults(bUpdateURL, filterBy, TopLevelType = null, SubLevelType = null){
                 
                 if (TopLevelType === null){
                     TopLevelType = SHRM.utils.getUrlParameter('TopLevelType')
                     if (!TopLevelType){
-                        alert('URL is not properly configured.\n\nA properly configured URL should look similar to:\n.../index.html?TopLevelType=empathy&startingTabGroup=default')
+                        alert('URL is not properly configured.\n\nA properly configured URL should look similar to:\n.../index.html?TopLevelType=empathy&SubLevelType=default')
                         return
                     }
                 }
-                if (startingTabGroup === null){
-                    startingTabGroup = SHRM.utils.getUrlParameter('startingTabGroup')
-                    if (!startingTabGroup){
-                        alert('URL is not properly configured.\n\nA properly configured URL should look similar to:\n.../index.html?TopLevelType=empathy&startingTabGroup=default')
+                if (SubLevelType === null){
+                    SubLevelType = SHRM.utils.getUrlParameter('SubLevelType')
+                    if (!SubLevelType){
+                        alert('URL is not properly configured.\n\nA properly configured URL should look similar to:\n.../index.html?TopLevelType=empathy&SubLevelType=default')
                         return
                     }
                 }
                 
-                if(startingTabGroup){
-                    if (SHRM.utils.pageConfig.tabGroup[startingTabGroup]){
-                        SHRM.utils.pageConfig.tabs = SHRM.utils.pageConfig.tabGroup[startingTabGroup]
-                        categoryType = SHRM.utils.pageConfig.tabs[0].id
+                if(SubLevelType){
+                    if (SHRM.utils.tabGroup[SubLevelType]){
+                        SHRM.utils.tabs = SHRM.utils.tabGroup[SubLevelType]
+                        categoryType = SHRM.utils.tabs[0].id
                         if (!categoryType){
-                            alert('The configuration for SHRM.utils.' + startingTabGroup + ' has not been configured properly.  Missing id property.')
+                            alert('The configuration for SHRM.utils.' + SubLevelType + ' has not been configured properly.  Missing id property.')
                             return
                         }
                     }else{
-                        alert('The configuration for SHRM.utils.' + startingTabGroup + ' has not been configured properly.')
+                        alert('The configuration for SHRM.utils.' + SubLevelType + ' has not been configured properly.')
                         return
                     }
                 }else{
-                    alert('URL is not properly configured.\n\nA properly configured URL should look similar to:\n.../index.html?TopLevelType=empathy&startingTabGroup=default')
+                    alert('URL is not properly configured.\n\nA properly configured URL should look similar to:\n.../index.html?TopLevelType=empathy&SubLevelType=default')
                     return
                 }
                 
                 // Init variables
                 SHRM.utils.pageConfig.filterBy = filterBy
                 SHRM.utils.pageConfig.TopLevelType = TopLevelType
-                SHRM.utils.pageConfig.tabGroup = startingTabGroup
+                SHRM.utils.pageConfig.SubLevelType = SubLevelType
+                SHRM.utils.pageConfig.categoryType = categoryType
                 SHRM.utils.pageConfig.exportType = ''
                 
                 // generate default values for configDict
@@ -350,10 +348,10 @@
 
                 SHRM.utils.initViewModel()
                 
-                //if (categoryType){
-                    //SHRM.utils.pageConfig.categoryText = $('a[href$="' + categoryType + '"]').text()
-                    //SHRM.utils.pageConfig.categoryCode = $('a[href$="' + categoryType + '"]').attr('categoryCode')
-                //}
+                if (categoryType){
+                    SHRM.utils.pageConfig.categoryText = $('a[href$="' + categoryType + '"]').text()
+                    SHRM.utils.pageConfig.categoryCode = $('a[href$="' + categoryType + '"]').attr('categoryCode')
+                }
 
                 // load settings from previous visit to the page
                 if (localStorage.getItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + ".configDict")){
@@ -361,40 +359,21 @@
                     SHRM.utils.pageConfig.configDict = JSON.parse(json_string)
                 }
                 if (localStorage.getItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + ".categoryType")) {
-                    categoryType = localStorage.getItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + "." + startingTabGroup +  ".categoryType")
-                    //$('a[href$="' + categoryType + '"]').trigger('click')
-                    //after loading settings from previous visit, be sure to set the .navpicker and .filterable selects to the appropriate values and then 
-                    //trigger the appropriate events
+                    categoryType = localStorage.getItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + "." + SubLevelType +  ".categoryType")
+                    SHRM.utils.pageConfig.categoryType = categoryType
+                    SHRM.utils.pageConfig.categoryText = $('a[href$="' + categoryType + '"]').text()
+                    SHRM.utils.pageConfig.categoryCode = $('a[href$="' + categoryType + '"]').attr('categoryCode')
+                    $('a[href$="' + categoryType + '"]').trigger('click')
                     bUpdateURL = false
                 }
                 
                 SHRM.utils.pageConfig.bUpdateURL = bUpdateURL
-                $('.selectpicker').selectpicker('refresh')
                 
                 //// No tab (categoryType) has been previously selected, so the 1st tab is loaded by default
                 //// Unfortunately, 'show.bs.tab' is not triggered as expected, so we must force it
-                showPageConent()    // or $('a[href$="#' + categoryType + '"]').tab('show') if using tabs
-            }
-
-            function showPageConent(){
-                localStorage.setItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + "." + SHRM.utils.pageConfig.tabGroup + ".categoryType", $('.navpicker').find( "option:selected" ).attr('tab_id'))
-                $(".navpicker option[value='" + $('.navpicker').find( "option:selected" ).attr('tab_id') + "']").prop("selected", true);
-                $('.navpicker').find('.filter-option-inner-inner').text($('.navpicker').find( "option:selected" ).text())
-
-                $('.filterable').each(function() {
-                    if ($(this).attr('data-filterable')){
-                        key = $(this).attr('data-key')
-                        value = $(this).val()
-                        text = $(this).find( "option:selected" ).text()
-                        
-                        $(this).val(SHRM.utils.pageConfig.configDict[key])
-                        $(this).find("option[value='" + SHRM.utils.pageConfig.configDict[key] + "']").prop("selected", true);
-                        $(this).parent().find('.filter-option-inner-inner').text($(this).find( "option:selected" ).text())
-                    }
-                });
-
-                $('.btn-filter').trigger('click')
-                //console.log('shown.bs.tab: ' + obj.is(':visible'))
+                $('a[href$="#' + categoryType + '"]').tab('show')
+                ////$('a[href$="#' + categoryType + '"]').trigger('show.bs.tab')
+                ////$('a[href$="#' + categoryType + '"]').trigger('shown.bs.tab')
             }
 
             function showSpinner(bShow){
@@ -482,17 +461,42 @@
                     $('.btn-export').removeClass('disabled');
                 });
 
-                /*
                 $(document).on('shown.bs.tab', function (event) {
-                    showPageConent()
+                    var arrHREF = $(event.target).prop('href').split('#')
+                    var url = ''
+                    if (arrHREF.length == 2){
+                        url = arrHREF[1]
+                        var obj = $('#' + url)
+                        SHRM.utils.pageConfig.categoryType = '#' + url
+                        localStorage.setItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + "." + SHRM.utils.pageConfig.SubLevelType + ".categoryType", '#' + url)
+                        $(".navpicker option[value='" + SHRM.utils.pageConfig.categoryType.replace('#','') + "']").prop("selected", true);
+                        $('.navpicker').find('.filter-option-inner-inner').text($(event.target).text())
+                    }
+
+                    if (obj) {
+                        $('.filterable').each(function() {
+                            if ($(this).attr('data-filterable')){
+                                key = $(this).attr('data-key')
+                                value = $(this).val()
+                                text = $(this).find( "option:selected" ).text()
+                                
+                                $(this).val(SHRM.utils.pageConfig.configDict[key])
+                                $(this).find("option[value='" + SHRM.utils.pageConfig.configDict[key] + "']").prop("selected", true);
+                                $(this).parent().find('.filter-option-inner-inner').text($(this).find( "option:selected" ).text())
+                            }
+                        });
+
+                        $('.btn-filter').trigger('click')
+                        console.log('shown.bs.tab: ' + obj.is(':visible'))
+                    }
                 });
-                
 
                 $(document).on('show.bs.tab', function (event) {
-                    //SHRM.utils.pageConfig.categoryText = $( event.target ).text()
-                    //SHRM.utils.pageConfig.categoryCode = $( event.target ).attr('categoryCode')
+                    SHRM.utils.pageConfig.categoryText = $( event.target ).text()
+                    SHRM.utils.pageConfig.categoryCode = $( event.target ).attr('categoryCode')
+                    SHRM.utils.pageConfig.categoryType = $( event.target ).attr('href')
+                    id = $( event.target ).attr('href')
                 });
-                */
 
                 $(document).on('show.bs.dropdown', function (event) {
                     SHRM.utils.filterSelects(event)     //filter tabledata based off of value(s) of other filterable selects
@@ -505,7 +509,8 @@
                 });
                 
                 $('.navpicker').on('change', function (event) {
-                    $('.btn-filter').trigger('click')
+                    debugger
+                    $('#' + $( event.target ).val()).trigger('click')
                 });
 
                 $('.export_as_csv').on('click', function (event) {
@@ -555,6 +560,7 @@
 
                     //Make CSV downloadable
                     var downloadLink = document.createElement("a");
+                    //CSVString = JSON.stringify(SHRM.utils.dataObj)    // Use this if you want to download the JSON used to configure the dropdowns.
                     var blob = new Blob(["\ufeff", CSVString]);
                     var url = URL.createObjectURL(blob);
 
@@ -640,6 +646,7 @@
                                 SHRM.utils.sleep(2000).then(() => { showSpinner(false); });
                             });
                             
+                            //alert($( event.target ).attr('alt-href'))
                             SHRM.utils.pageConfig.exportType = $( event.target ).attr('alt-href')
                             if (typeof SHRM.utils.pushToGTM === 'function') {  SHRM.utils.pushToGTM(true); }
                             
@@ -714,22 +721,22 @@
                                     SHRM.utils.sleep(2000).then(() => { showSpinner(false); });
                                 });
 
+                                
+                                //alert($( event.target ).attr('alt-href'))
                                 SHRM.utils.pageConfig.exportType = $( event.target ).attr('alt-href')
                                 if (typeof SHRM.utils.pushToGTM === 'function') {  SHRM.utils.pushToGTM(true); }
                                 
                             })
                         .catch(() => console.error('Something went wrong loading dynamic JS'))                    
                 });
-                
-                /*
+                         
                 $('.export_as').on('mouseover', function(event) {
-                    //$( event.target ).attr('href', SHRH.utils.buildURL() + '/' + $( event.target ).attr('alt-href'))
+                    $( event.target ).attr('href', SHRH.utils.buildURL() + '/' + $( event.target ).attr('alt-href'))
                 } );
 
                 $('.export_as').on('mouseout', function(event) {
-                    //$( event.target ).attr('href', '#')
+                    $( event.target ).attr('href', '#')
                 } );
-                */
 
                 //SHRM.utils.sleep(1000).then(() => { initDefaults(true, 'by-all', 'empathy', 'default'); });   //The line below was moved to $(window).load()
 
@@ -740,227 +747,230 @@
                 initDefaults(false, 'by-all', 'empathy', 'main')  // ('by-1', ['region','industry','orgsize'], 'benefitsPortal', 'healthcare', null, 'drilldown-tab1')
             });
 
-            SHRM.utils.pageConfig.tabGroup = new Object()    
-            SHRM.utils.pageConfig.tabGroup.example = [
+            //SHRM.utils.dataObj = []
+            SHRM.utils.tabGroup = new Object()    
+            SHRM.utils.tabGroup.example = [
                 {
                     "name": "Tab Text",
-                    "json_category": "Tab_Text",
-                    "id": "drilldown-tab1"
+                    "eventCategory": "Tab_Text",
+                    "id": "drilldown-tab1",
+                    "data-val-file-prefix": "./data/GenHealth/GenHealth",
+                    "data-val-config-keys": "['region','industry','orgsize']",
+                    "data-val-config-path": "./data/config.csv"
                 }
             ]
 
-            SHRM.utils.pageConfig.tabGroup.main = [
+            SHRM.utils.tabGroup.main = [
                 {
                     "name": "Empathy Index",
-                    "json_category": "default",
+                    "eventCategory": "default",
                     "id": "drilldown-tab1"
                 },
                 {
                     "name": "Test Name",
-                    "json_category": "test",
+                    "eventCategory": "test category",
                     "id": "drilldown-tab2"
                 }
             ]
 
             json_tabledata = [
-                {"category":"test","industry":"all","orgsize":"all","region":"all","total_n":"5048","v1":"3.74","v2":"2.55","v3":"2.86","v4":"2.34","v5":"3.93","total":"15.42"},
-                {"category":"default","industry":"all","orgsize":"all","region":"all","total_n":"5048","v1":"13.74","v2":"12.55","v3":"12.86","v4":"12.34","v5":"13.93","total":"65.42"},
-                {"category":"default","industry":"all","orgsize":"SM","region":"all","total_n":"2350","v1":"13.92","v2":"11.91","v3":"12.83","v4":"12.5","v5":"14.28","total":"65.44"},
-                {"category":"default","industry":"all","orgsize":"MD","region":"all","total_n":"1231","v1":"13.53","v2":"12.48","v3":"12.56","v4":"12.17","v5":"13.37","total":"64.11"},
-                {"category":"default","industry":"all","orgsize":"LG","region":"all","total_n":"765","v1":"13.59","v2":"13.27","v3":"12.9","v4":"12.3","v5":"13.8","total":"65.86"},
-                {"category":"default","industry":"all","orgsize":"XL","region":"all","total_n":"690","v1":"13.64","v2":"14.11","v3":"13.45","v4":"12.16","v5":"13.89","total":"67.25"},
-                {"category":"default","industry":"CONSTR","orgsize":"all","region":"all","total_n":"273","v1":"14.29","v2":"11.83","v3":"13.18","v4":"13.39","v5":"14.73","total":"67.42"},
-                {"category":"default","industry":"CONSTR","orgsize":"SM","region":"all","total_n":"183","v1":"14.37","v2":"11.61","v3":"13.37","v4":"13.98","v5":"15.15","total":"68.48"},
-                {"category":"default","industry":"CONSTR","orgsize":"MD","region":"all","total_n":"53","v1":"14.16","v2":"12.28","v3":"12.32","v4":"12.28","v5":"14.2","total":"65.24"},
-                {"category":"default","industry":"CONSTR","orgsize":"LG","region":"all","total_n":"27","v1":"14.46","v2":"12.63","v3":"14.04","v4":"12.61","v5":"13.78","total":"67.52"},
-                {"category":"default","industry":"MANFCT","orgsize":"all","region":"all","total_n":"405","v1":"12.48","v2":"10.95","v3":"11.93","v4":"11.43","v5":"13.12","total":"59.91"},
-                {"category":"default","industry":"MANFCT","orgsize":"SM","region":"all","total_n":"153","v1":"12.16","v2":"10.02","v3":"11.7","v4":"12.03","v5":"14.11","total":"60.02"},
-                {"category":"default","industry":"MANFCT","orgsize":"MD","region":"all","total_n":"152","v1":"12.6","v2":"10.95","v3":"12.02","v4":"10.83","v5":"11.72","total":"58.12"},
-                {"category":"default","industry":"MANFCT","orgsize":"LG","region":"all","total_n":"61","v1":"12.67","v2":"11.58","v3":"11.62","v4":"11.0","v5":"13.71","total":"60.58"},
-                {"category":"default","industry":"MANFCT","orgsize":"XL","region":"all","total_n":"38","v1":"12.95","v2":"13.74","v3":"13.0","v4":"12.11","v5":"13.8","total":"65.6"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"all","region":"all","total_n":"893","v1":"13.11","v2":"11.6","v3":"12.13","v4":"11.78","v5":"13.2","total":"61.82"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"SM","region":"all","total_n":"438","v1":"12.78","v2":"10.44","v3":"11.45","v4":"11.29","v5":"12.88","total":"58.84"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"MD","region":"all","total_n":"211","v1":"13.64","v2":"12.63","v3":"12.85","v4":"12.37","v5":"13.31","total":"64.8"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"LG","region":"all","total_n":"96","v1":"12.94","v2":"12.6","v3":"11.97","v4":"12.03","v5":"13.91","total":"63.45"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"XL","region":"all","total_n":"146","v1":"13.49","v2":"12.99","v3":"13.27","v4":"12.26","v5":"13.6","total":"65.61"},
-                {"category":"default","industry":"FINANCE","orgsize":"all","region":"all","total_n":"410","v1":"14.27","v2":"13.08","v3":"13.73","v4":"12.98","v5":"14.39","total":"68.45"},
-                {"category":"default","industry":"FINANCE","orgsize":"SM","region":"all","total_n":"187","v1":"14.01","v2":"11.86","v3":"12.95","v4":"12.42","v5":"14.43","total":"65.67"},
-                {"category":"default","industry":"FINANCE","orgsize":"MD","region":"all","total_n":"83","v1":"14.33","v2":"12.5","v3":"13.44","v4":"12.78","v5":"14.17","total":"67.22"},
-                {"category":"default","industry":"FINANCE","orgsize":"LG","region":"all","total_n":"72","v1":"14.03","v2":"14.28","v3":"14.27","v4":"13.25","v5":"13.71","total":"69.54"},
-                {"category":"default","industry":"FINANCE","orgsize":"XL","region":"all","total_n":"68","v1":"15.21","v2":"15.87","v3":"15.68","v4":"14.47","v5":"15.25","total":"76.48"},
-                {"category":"default","industry":"PROFBUS","orgsize":"all","region":"all","total_n":"308","v1":"14.95","v2":"13.81","v3":"14.35","v4":"13.54","v5":"15.23","total":"71.88"},
-                {"category":"default","industry":"PROFBUS","orgsize":"SM","region":"all","total_n":"180","v1":"15.18","v2":"13.61","v3":"14.3","v4":"13.66","v5":"15.2","total":"71.95"},
-                {"category":"default","industry":"PROFBUS","orgsize":"MD","region":"all","total_n":"57","v1":"14.2","v2":"12.87","v3":"13.25","v4":"12.67","v5":"14.95","total":"67.94"},
-                {"category":"default","industry":"PROFBUS","orgsize":"LG","region":"all","total_n":"41","v1":"14.41","v2":"14.94","v3":"14.98","v4":"13.34","v5":"15.35","total":"73.02"},
-                {"category":"default","industry":"PROFBUS","orgsize":"XL","region":"all","total_n":"30","v1":"15.7","v2":"15.24","v3":"15.91","v4":"14.74","v5":"15.81","total":"77.4"},
-                {"category":"default","industry":"OTHSERV","orgsize":"all","region":"all","total_n":"432","v1":"14.21","v2":"12.59","v3":"13.38","v4":"13.31","v5":"13.97","total":"67.46"},
-                {"category":"default","industry":"OTHSERV","orgsize":"SM","region":"all","total_n":"224","v1":"15.15","v2":"12.53","v3":"14.08","v4":"13.47","v5":"14.21","total":"69.44"},
-                {"category":"default","industry":"OTHSERV","orgsize":"MD","region":"all","total_n":"119","v1":"14.45","v2":"13.62","v3":"13.98","v4":"14.11","v5":"14.71","total":"70.87"},
-                {"category":"default","industry":"OTHSERV","orgsize":"LG","region":"all","total_n":"65","v1":"12.44","v2":"11.34","v3":"11.15","v4":"12.65","v5":"13.03","total":"60.61"},
-                {"category":"default","industry":"OTHSERV","orgsize":"XL","region":"all","total_n":"24","v1":"9.01","v2":"11.49","v3":"9.93","v4":"9.61","v5":"10.52","total":"50.56"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"all","region":"all","total_n":"914","v1":"13.62","v2":"13.44","v3":"12.61","v4":"11.49","v5":"13.39","total":"64.55"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"SM","region":"all","total_n":"170","v1":"14.39","v2":"11.86","v3":"12.75","v4":"11.51","v5":"14.23","total":"64.74"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"MD","region":"all","total_n":"220","v1":"13.41","v2":"12.74","v3":"11.98","v4":"11.44","v5":"12.86","total":"62.43"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"LG","region":"all","total_n":"258","v1":"13.62","v2":"14.05","v3":"12.76","v4":"11.92","v5":"13.3","total":"65.65"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"XL","region":"all","total_n":"266","v1":"13.32","v2":"14.44","v3":"12.87","v4":"11.1","v5":"13.37","total":"65.1"},
-                {"category":"default","industry":"HLTHSS","orgsize":"all","region":"all","total_n":"681","v1":"13.63","v2":"13.07","v3":"13.03","v4":"12.27","v5":"14.01","total":"66.01"},
-                {"category":"default","industry":"HLTHSS","orgsize":"SM","region":"all","total_n":"334","v1":"13.59","v2":"13.02","v3":"13.0","v4":"12.31","v5":"13.99","total":"65.91"},
-                {"category":"default","industry":"HLTHSS","orgsize":"MD","region":"all","total_n":"182","v1":"13.41","v2":"12.58","v3":"12.5","v4":"12.0","v5":"13.84","total":"64.33"},
-                {"category":"default","industry":"HLTHSS","orgsize":"LG","region":"all","total_n":"90","v1":"13.78","v2":"13.13","v3":"13.29","v4":"12.06","v5":"13.62","total":"65.88"},
-                {"category":"default","industry":"HLTHSS","orgsize":"XL","region":"all","total_n":"73","v1":"14.24","v2":"14.47","v3":"14.21","v4":"13.04","v5":"15.01","total":"70.97"},
-                {"category":"default","industry":"LSHOSP","orgsize":"all","region":"all","total_n":"543","v1":"13.45","v2":"11.72","v3":"12.24","v4":"12.24","v5":"14.15","total":"63.8"},
-                {"category":"default","industry":"LSHOSP","orgsize":"SM","region":"all","total_n":"330","v1":"13.48","v2":"11.34","v3":"12.2","v4":"12.03","v5":"14.48","total":"63.53"},
-                {"category":"default","industry":"LSHOSP","orgsize":"MD","region":"all","total_n":"136","v1":"12.65","v2":"11.93","v3":"11.44","v4":"12.0","v5":"12.5","total":"60.52"},
-                {"category":"default","industry":"LSHOSP","orgsize":"LG","region":"all","total_n":"45","v1":"14.93","v2":"12.5","v3":"13.98","v4":"14.17","v5":"16.18","total":"71.76"},
-                {"category":"default","industry":"LSHOSP","orgsize":"XL","region":"all","total_n":"31","v1":"14.42","v2":"13.73","v3":"13.56","v4":"12.74","v5":"14.92","total":"69.37"},
-                {"category":"default","industry":"OTHER","orgsize":"all","region":"all","total_n":"180","v1":"16.18","v2":"14.54","v3":"14.78","v4":"14.56","v5":"16.55","total":"76.61"},
-                {"category":"default","industry":"OTHER","orgsize":"SM","region":"all","total_n":"148","v1":"16.25","v2":"14.39","v3":"14.73","v4":"14.49","v5":"16.56","total":"76.42"},
-                {"category":"default","industry":"all","orgsize":"all","region":"NE","total_n":"861","v1":"13.73","v2":"12.58","v3":"12.81","v4":"12.2","v5":"14.03","total":"65.35"},
-                {"category":"default","industry":"all","orgsize":"SM","region":"NE","total_n":"424","v1":"13.95","v2":"11.96","v3":"12.56","v4":"12.24","v5":"14.59","total":"65.3"},
-                {"category":"default","industry":"all","orgsize":"MD","region":"NE","total_n":"197","v1":"13.3","v2":"12.21","v3":"12.33","v4":"11.55","v5":"12.88","total":"62.27"},
-                {"category":"default","industry":"all","orgsize":"LG","region":"NE","total_n":"132","v1":"13.42","v2":"14.1","v3":"13.35","v4":"12.71","v5":"13.97","total":"67.55"},
-                {"category":"default","industry":"all","orgsize":"XL","region":"NE","total_n":"107","v1":"14.02","v2":"13.89","v3":"14.02","v4":"12.64","v5":"13.99","total":"68.56"},
-                {"category":"default","industry":"CONSTR","orgsize":"all","region":"NE","total_n":"46","v1":"15.52","v2":"11.79","v3":"13.73","v4":"13.43","v5":"15.51","total":"69.98"},
-                {"category":"default","industry":"CONSTR","orgsize":"SM","region":"NE","total_n":"29","v1":"15.58","v2":"12.0","v3":"14.74","v4":"14.61","v5":"16.49","total":"73.42"},
-                {"category":"default","industry":"MANFCT","orgsize":"all","region":"NE","total_n":"65","v1":"13.87","v2":"11.16","v3":"12.87","v4":"12.45","v5":"14.15","total":"64.5"},
-                {"category":"default","industry":"MANFCT","orgsize":"SM","region":"NE","total_n":"30","v1":"14.2","v2":"10.48","v3":"12.54","v4":"12.29","v5":"14.78","total":"64.29"},
-                {"category":"default","industry":"MANFCT","orgsize":"MD","region":"NE","total_n":"20","v1":"14.47","v2":"11.15","v3":"13.23","v4":"12.56","v5":"12.05","total":"63.46"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"all","region":"NE","total_n":"186","v1":"13.36","v2":"11.86","v3":"12.8","v4":"12.27","v5":"13.59","total":"63.88"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"SM","region":"NE","total_n":"94","v1":"12.83","v2":"10.99","v3":"11.62","v4":"11.54","v5":"13.97","total":"60.95"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"MD","region":"NE","total_n":"42","v1":"12.69","v2":"12.1","v3":"13.44","v4":"12.15","v5":"12.32","total":"62.7"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"LG","region":"NE","total_n":"21","v1":"14.2","v2":"14.74","v3":"13.99","v4":"13.26","v5":"15.59","total":"71.78"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"XL","region":"NE","total_n":"29","v1":"15.49","v2":"12.29","v3":"14.89","v4":"14.17","v5":"12.72","total":"69.56"},
-                {"category":"default","industry":"FINANCE","orgsize":"all","region":"NE","total_n":"73","v1":"14.38","v2":"11.99","v3":"13.51","v4":"12.89","v5":"14.67","total":"67.44"},
-                {"category":"default","industry":"FINANCE","orgsize":"SM","region":"NE","total_n":"35","v1":"14.19","v2":"10.01","v3":"12.18","v4":"11.88","v5":"14.39","total":"62.65"},
-                {"category":"default","industry":"PROFBUS","orgsize":"all","region":"NE","total_n":"65","v1":"15.31","v2":"14.62","v3":"14.47","v4":"13.6","v5":"15.87","total":"73.87"},
-                {"category":"default","industry":"PROFBUS","orgsize":"SM","region":"NE","total_n":"34","v1":"15.95","v2":"14.69","v3":"14.7","v4":"13.42","v5":"16.15","total":"74.91"},
-                {"category":"default","industry":"OTHSERV","orgsize":"all","region":"NE","total_n":"59","v1":"12.66","v2":"10.75","v3":"11.68","v4":"11.3","v5":"12.4","total":"58.79"},
-                {"category":"default","industry":"OTHSERV","orgsize":"SM","region":"NE","total_n":"22","v1":"12.77","v2":"8.64","v3":"11.95","v4":"9.95","v5":"12.77","total":"56.08"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"all","region":"NE","total_n":"129","v1":"12.9","v2":"13.82","v3":"12.29","v4":"10.65","v5":"13.66","total":"63.32"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"SM","region":"NE","total_n":"41","v1":"12.97","v2":"11.4","v3":"11.66","v4":"9.99","v5":"14.55","total":"60.57"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"MD","region":"NE","total_n":"21","v1":"14.38","v2":"15.84","v3":"13.87","v4":"11.75","v5":"14.87","total":"70.71"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"LG","region":"NE","total_n":"38","v1":"13.23","v2":"14.27","v3":"12.29","v4":"11.64","v5":"12.09","total":"63.52"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"XL","region":"NE","total_n":"30","v1":"11.33","v2":"15.11","v3":"12.0","v4":"9.54","v5":"13.57","total":"61.55"},
-                {"category":"default","industry":"HLTHSS","orgsize":"all","region":"NE","total_n":"141","v1":"12.84","v2":"13.18","v3":"12.49","v4":"11.87","v5":"13.16","total":"63.54"},
-                {"category":"default","industry":"HLTHSS","orgsize":"SM","region":"NE","total_n":"73","v1":"12.85","v2":"13.25","v3":"12.5","v4":"11.96","v5":"12.81","total":"63.37"},
-                {"category":"default","industry":"HLTHSS","orgsize":"MD","region":"NE","total_n":"35","v1":"11.39","v2":"12.17","v3":"10.42","v4":"9.98","v5":"11.93","total":"55.89"},
-                {"category":"default","industry":"LSHOSP","orgsize":"all","region":"NE","total_n":"63","v1":"13.56","v2":"12.0","v3":"12.12","v4":"11.2","v5":"13.67","total":"62.55"},
-                {"category":"default","industry":"LSHOSP","orgsize":"SM","region":"NE","total_n":"37","v1":"14.14","v2":"12.85","v3":"12.69","v4":"12.68","v5":"15.4","total":"67.76"},
-                {"category":"default","industry":"OTHER","orgsize":"all","region":"NE","total_n":"33","v1":"17.4","v2":"14.87","v3":"13.43","v4":"16.0","v5":"17.63","total":"79.33"},
-                {"category":"default","industry":"OTHER","orgsize":"SM","region":"NE","total_n":"28","v1":"17.66","v2":"14.7","v3":"13.13","v4":"15.95","v5":"17.68","total":"79.12"},
-                {"category":"default","industry":"all","orgsize":"all","region":"M","total_n":"1180","v1":"13.65","v2":"12.31","v3":"12.81","v4":"11.97","v5":"13.7","total":"64.44"},
-                {"category":"default","industry":"all","orgsize":"SM","region":"M","total_n":"539","v1":"14.19","v2":"12.17","v3":"13.21","v4":"12.25","v5":"14.24","total":"66.06"},
-                {"category":"default","industry":"all","orgsize":"MD","region":"M","total_n":"304","v1":"12.93","v2":"11.53","v3":"11.81","v4":"11.17","v5":"13.14","total":"60.58"},
-                {"category":"default","industry":"all","orgsize":"LG","region":"M","total_n":"181","v1":"13.13","v2":"12.51","v3":"12.49","v4":"11.74","v5":"13.02","total":"62.89"},
-                {"category":"default","industry":"all","orgsize":"XL","region":"M","total_n":"153","v1":"13.86","v2":"14.29","v3":"13.86","v4":"12.9","v5":"13.81","total":"68.72"},
-                {"category":"default","industry":"CONSTR","orgsize":"all","region":"M","total_n":"43","v1":"14.48","v2":"12.08","v3":"12.13","v4":"12.13","v5":"13.25","total":"64.07"},
-                {"category":"default","industry":"CONSTR","orgsize":"SM","region":"M","total_n":"25","v1":"13.74","v2":"11.47","v3":"11.47","v4":"12.69","v5":"13.42","total":"62.79"},
-                {"category":"default","industry":"MANFCT","orgsize":"all","region":"M","total_n":"122","v1":"12.5","v2":"11.13","v3":"11.5","v4":"11.04","v5":"13.6","total":"59.77"},
-                {"category":"default","industry":"MANFCT","orgsize":"SM","region":"M","total_n":"33","v1":"13.74","v2":"12.24","v3":"12.21","v4":"12.13","v5":"14.47","total":"64.79"},
-                {"category":"default","industry":"MANFCT","orgsize":"MD","region":"M","total_n":"57","v1":"12.14","v2":"10.14","v3":"11.06","v4":"10.42","v5":"13.43","total":"57.19"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"all","region":"M","total_n":"184","v1":"12.91","v2":"11.38","v3":"12.0","v4":"11.59","v5":"12.83","total":"60.71"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"SM","region":"M","total_n":"86","v1":"13.5","v2":"11.21","v3":"12.3","v4":"11.8","v5":"13.05","total":"61.86"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"MD","region":"M","total_n":"42","v1":"13.04","v2":"11.18","v3":"11.74","v4":"12.18","v5":"11.94","total":"60.08"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"LG","region":"M","total_n":"22","v1":"11.97","v2":"11.29","v3":"11.21","v4":"10.26","v5":"12.52","total":"57.25"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"XL","region":"M","total_n":"32","v1":"11.88","v2":"12.49","v3":"12.32","v4":"11.42","v5":"13.9","total":"62.01"},
-                {"category":"default","industry":"FINANCE","orgsize":"all","region":"M","total_n":"100","v1":"14.61","v2":"14.04","v3":"14.54","v4":"13.65","v5":"15.06","total":"71.9"},
-                {"category":"default","industry":"FINANCE","orgsize":"SM","region":"M","total_n":"46","v1":"15.12","v2":"13.35","v3":"14.48","v4":"13.56","v5":"15.28","total":"71.79"},
-                {"category":"default","industry":"FINANCE","orgsize":"MD","region":"M","total_n":"21","v1":"13.4","v2":"13.11","v3":"13.43","v4":"13.08","v5":"15.88","total":"68.9"},
-                {"category":"default","industry":"PROFBUS","orgsize":"all","region":"M","total_n":"57","v1":"14.89","v2":"13.3","v3":"13.61","v4":"12.21","v5":"15.04","total":"69.05"},
-                {"category":"default","industry":"PROFBUS","orgsize":"SM","region":"M","total_n":"40","v1":"14.44","v2":"12.9","v3":"13.13","v4":"11.98","v5":"14.8","total":"67.25"},
-                {"category":"default","industry":"OTHSERV","orgsize":"all","region":"M","total_n":"105","v1":"15.17","v2":"13.22","v3":"14.96","v4":"13.78","v5":"15.38","total":"72.51"},
-                {"category":"default","industry":"OTHSERV","orgsize":"SM","region":"M","total_n":"49","v1":"14.85","v2":"13.42","v3":"14.58","v4":"12.72","v5":"15.5","total":"71.07"},
-                {"category":"default","industry":"OTHSERV","orgsize":"MD","region":"M","total_n":"35","v1":"15.1","v2":"14.21","v3":"16.11","v4":"14.58","v5":"15.53","total":"75.53"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"all","region":"M","total_n":"229","v1":"13.72","v2":"13.08","v3":"12.53","v4":"11.79","v5":"12.88","total":"64.0"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"SM","region":"M","total_n":"52","v1":"16.11","v2":"13.11","v3":"14.12","v4":"13.21","v5":"14.41","total":"70.96"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"MD","region":"M","total_n":"61","v1":"12.53","v2":"11.18","v3":"10.21","v4":"10.05","v5":"12.92","total":"56.89"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"LG","region":"M","total_n":"56","v1":"12.34","v2":"13.31","v3":"12.26","v4":"11.28","v5":"12.23","total":"61.42"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"XL","region":"M","total_n":"60","v1":"14.13","v2":"14.77","v3":"13.74","v4":"12.78","v5":"12.1","total":"67.52"},
-                {"category":"default","industry":"HLTHSS","orgsize":"all","region":"M","total_n":"171","v1":"13.47","v2":"12.59","v3":"12.79","v4":"11.51","v5":"13.69","total":"64.05"},
-                {"category":"default","industry":"HLTHSS","orgsize":"SM","region":"M","total_n":"85","v1":"13.66","v2":"12.91","v3":"12.85","v4":"11.47","v5":"13.86","total":"64.75"},
-                {"category":"default","industry":"HLTHSS","orgsize":"MD","region":"M","total_n":"45","v1":"13.37","v2":"11.31","v3":"12.4","v4":"11.6","v5":"13.58","total":"62.26"},
-                {"category":"default","industry":"HLTHSS","orgsize":"LG","region":"M","total_n":"24","v1":"13.14","v2":"12.6","v3":"12.74","v4":"10.67","v5":"12.59","total":"61.74"},
-                {"category":"default","industry":"LSHOSP","orgsize":"all","region":"M","total_n":"127","v1":"12.33","v2":"10.26","v3":"11.56","v4":"10.9","v5":"12.96","total":"58.01"},
-                {"category":"default","industry":"LSHOSP","orgsize":"SM","region":"M","total_n":"86","v1":"12.8","v2":"9.96","v3":"12.33","v4":"11.43","v5":"13.51","total":"60.03"},
-                {"category":"default","industry":"LSHOSP","orgsize":"MD","region":"M","total_n":"26","v1":"8.96","v2":"10.28","v3":"7.84","v4":"6.99","v5":"9.28","total":"43.35"},
-                {"category":"default","industry":"OTHER","orgsize":"all","region":"M","total_n":"42","v1":"15.85","v2":"13.28","v3":"15.58","v4":"13.35","v5":"15.94","total":"74.0"},
-                {"category":"default","industry":"OTHER","orgsize":"SM","region":"M","total_n":"36","v1":"16.03","v2":"13.03","v3":"15.8","v4":"13.67","v5":"16.2","total":"74.73"},
-                {"category":"default","industry":"all","orgsize":"all","region":"S","total_n":"1847","v1":"13.55","v2":"12.47","v3":"12.61","v4":"12.45","v5":"13.8","total":"64.88"},
-                {"category":"default","industry":"all","orgsize":"SM","region":"S","total_n":"808","v1":"13.62","v2":"11.78","v3":"12.48","v4":"12.62","v5":"14.12","total":"64.62"},
-                {"category":"default","industry":"all","orgsize":"MD","region":"S","total_n":"474","v1":"13.83","v2":"12.88","v3":"12.89","v4":"12.95","v5":"13.49","total":"66.04"},
-                {"category":"default","industry":"all","orgsize":"LG","region":"S","total_n":"292","v1":"13.32","v2":"12.68","v3":"12.28","v4":"12.13","v5":"13.84","total":"64.25"},
-                {"category":"default","industry":"all","orgsize":"XL","region":"S","total_n":"272","v1":"13.12","v2":"13.6","v3":"12.85","v4":"11.4","v5":"13.36","total":"64.33"},
-                {"category":"default","industry":"CONSTR","orgsize":"all","region":"S","total_n":"100","v1":"13.7","v2":"11.38","v3":"13.31","v4":"13.84","v5":"15.0","total":"67.23"},
-                {"category":"default","industry":"CONSTR","orgsize":"SM","region":"S","total_n":"71","v1":"13.95","v2":"11.37","v3":"13.49","v4":"14.4","v5":"15.73","total":"68.94"},
-                {"category":"default","industry":"MANFCT","orgsize":"all","region":"S","total_n":"152","v1":"11.85","v2":"10.83","v3":"11.73","v4":"11.6","v5":"12.2","total":"58.21"},
-                {"category":"default","industry":"MANFCT","orgsize":"SM","region":"S","total_n":"57","v1":"9.93","v2":"8.32","v3":"10.34","v4":"11.86","v5":"13.2","total":"53.65"},
-                {"category":"default","industry":"MANFCT","orgsize":"MD","region":"S","total_n":"60","v1":"12.73","v2":"12.06","v3":"12.87","v4":"11.52","v5":"10.42","total":"59.6"},
-                {"category":"default","industry":"MANFCT","orgsize":"LG","region":"S","total_n":"20","v1":"14.66","v2":"12.65","v3":"12.03","v4":"11.82","v5":"14.42","total":"65.58"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"all","region":"S","total_n":"304","v1":"12.97","v2":"11.86","v3":"11.75","v4":"11.63","v5":"13.01","total":"61.22"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"SM","region":"S","total_n":"128","v1":"12.52","v2":"10.8","v3":"11.06","v4":"11.17","v5":"12.09","total":"57.64"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"MD","region":"S","total_n":"84","v1":"13.81","v2":"12.72","v3":"12.6","v4":"12.17","v5":"13.96","total":"65.26"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"LG","region":"S","total_n":"45","v1":"12.06","v2":"11.94","v3":"10.71","v4":"11.83","v5":"13.52","total":"60.06"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"XL","region":"S","total_n":"47","v1":"13.57","v2":"13.1","v3":"13.19","v4":"11.78","v5":"13.39","total":"65.03"},
-                {"category":"default","industry":"FINANCE","orgsize":"all","region":"S","total_n":"137","v1":"14.23","v2":"13.13","v3":"13.42","v4":"12.94","v5":"13.95","total":"67.67"},
-                {"category":"default","industry":"FINANCE","orgsize":"SM","region":"S","total_n":"61","v1":"13.49","v2":"12.19","v3":"12.47","v4":"11.95","v5":"14.17","total":"64.27"},
-                {"category":"default","industry":"FINANCE","orgsize":"MD","region":"S","total_n":"28","v1":"15.61","v2":"12.19","v3":"13.17","v4":"13.01","v5":"12.76","total":"66.74"},
-                {"category":"default","industry":"FINANCE","orgsize":"LG","region":"S","total_n":"24","v1":"13.55","v2":"13.51","v3":"13.82","v4":"13.22","v5":"14.1","total":"68.2"},
-                {"category":"default","industry":"FINANCE","orgsize":"XL","region":"S","total_n":"25","v1":"15.17","v2":"16.13","v3":"15.66","v4":"15.02","v5":"14.6","total":"76.58"},
-                {"category":"default","industry":"PROFBUS","orgsize":"all","region":"S","total_n":"109","v1":"14.81","v2":"13.72","v3":"14.58","v4":"13.81","v5":"14.85","total":"71.77"},
-                {"category":"default","industry":"PROFBUS","orgsize":"SM","region":"S","total_n":"63","v1":"14.85","v2":"13.38","v3":"14.59","v4":"14.02","v5":"14.34","total":"71.18"},
-                {"category":"default","industry":"OTHSERV","orgsize":"all","region":"S","total_n":"167","v1":"13.95","v2":"12.8","v3":"12.61","v4":"14.01","v5":"13.81","total":"67.18"},
-                {"category":"default","industry":"OTHSERV","orgsize":"SM","region":"S","total_n":"81","v1":"16.31","v2":"13.77","v3":"14.09","v4":"15.62","v5":"14.65","total":"74.44"},
-                {"category":"default","industry":"OTHSERV","orgsize":"MD","region":"S","total_n":"53","v1":"13.21","v2":"12.84","v3":"12.81","v4":"13.82","v5":"14.04","total":"66.72"},
-                {"category":"default","industry":"OTHSERV","orgsize":"LG","region":"S","total_n":"21","v1":"11.54","v2":"11.83","v3":"9.44","v4":"12.06","v5":"13.1","total":"57.97"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"all","region":"S","total_n":"355","v1":"13.49","v2":"12.99","v3":"12.33","v4":"11.27","v5":"13.23","total":"63.31"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"SM","region":"S","total_n":"51","v1":"13.77","v2":"10.8","v3":"11.82","v4":"10.46","v5":"13.57","total":"60.42"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"MD","region":"S","total_n":"72","v1":"13.95","v2":"13.44","v3":"12.41","v4":"12.53","v5":"12.82","total":"65.15"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"LG","region":"S","total_n":"108","v1":"13.65","v2":"13.09","v3":"12.51","v4":"11.85","v5":"13.59","total":"64.69"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"XL","region":"S","total_n":"124","v1":"12.97","v2":"13.54","v3":"12.32","v4":"10.36","v5":"13.02","total":"62.21"},
-                {"category":"default","industry":"HLTHSS","orgsize":"all","region":"S","total_n":"217","v1":"13.85","v2":"13.1","v3":"13.23","v4":"12.6","v5":"14.44","total":"67.22"},
-                {"category":"default","industry":"HLTHSS","orgsize":"SM","region":"S","total_n":"98","v1":"13.41","v2":"12.42","v3":"12.88","v4":"12.39","v5":"14.45","total":"65.55"},
-                {"category":"default","industry":"HLTHSS","orgsize":"MD","region":"S","total_n":"66","v1":"14.34","v2":"13.72","v3":"13.83","v4":"13.31","v5":"14.7","total":"69.9"},
-                {"category":"default","industry":"HLTHSS","orgsize":"LG","region":"S","total_n":"27","v1":"13.89","v2":"12.8","v3":"12.42","v4":"11.79","v5":"13.39","total":"64.29"},
-                {"category":"default","industry":"HLTHSS","orgsize":"XL","region":"S","total_n":"25","v1":"14.21","v2":"14.51","v3":"13.96","v4":"12.46","v5":"14.87","total":"70.01"},
-                {"category":"default","industry":"LSHOSP","orgsize":"all","region":"S","total_n":"244","v1":"13.44","v2":"11.85","v3":"12.18","v4":"12.76","v5":"14.52","total":"64.75"},
-                {"category":"default","industry":"LSHOSP","orgsize":"SM","region":"S","total_n":"150","v1":"13.48","v2":"11.48","v3":"11.97","v4":"12.11","v5":"14.6","total":"63.64"},
-                {"category":"default","industry":"LSHOSP","orgsize":"MD","region":"S","total_n":"66","v1":"13.27","v2":"12.5","v3":"12.23","v4":"14.04","v5":"13.84","total":"65.88"},
-                {"category":"default","industry":"OTHER","orgsize":"all","region":"S","total_n":"62","v1":"15.33","v2":"14.0","v3":"13.68","v4":"13.67","v5":"15.73","total":"72.41"},
-                {"category":"default","industry":"OTHER","orgsize":"SM","region":"S","total_n":"48","v1":"15.19","v2":"13.74","v3":"13.4","v4":"13.26","v5":"15.47","total":"71.06"},
-                {"category":"default","industry":"all","orgsize":"all","region":"W","total_n":"1153","v1":"14.13","v2":"12.9","v3":"13.35","v4":"12.64","v5":"14.29","total":"67.31"},
-                {"category":"default","industry":"all","orgsize":"SM","region":"W","total_n":"579","v1":"14.08","v2":"11.81","v3":"13.18","v4":"12.73","v5":"14.31","total":"66.11"},
-                {"category":"default","industry":"all","orgsize":"MD","region":"W","total_n":"257","v1":"13.89","v2":"13.09","v3":"13.03","v4":"12.39","v5":"13.8","total":"66.2"},
-                {"category":"default","industry":"all","orgsize":"LG","region":"W","total_n":"159","v1":"14.75","v2":"14.52","v3":"14.12","v4":"12.93","v5":"14.49","total":"70.81"},
-                {"category":"default","industry":"all","orgsize":"XL","region":"W","total_n":"158","v1":"14.07","v2":"14.97","v3":"13.71","v4":"12.43","v5":"14.8","total":"69.98"},
-                {"category":"default","industry":"CONSTR","orgsize":"all","region":"W","total_n":"84","v1":"14.22","v2":"12.28","v3":"13.28","v4":"13.48","v5":"14.73","total":"67.99"},
-                {"category":"default","industry":"CONSTR","orgsize":"SM","region":"W","total_n":"58","v1":"14.54","v2":"11.77","v3":"13.36","v4":"13.71","v5":"14.49","total":"67.87"},
-                {"category":"default","industry":"MANFCT","orgsize":"all","region":"W","total_n":"66","v1":"12.48","v2":"10.69","v3":"12.25","v4":"10.78","v5":"13.34","total":"59.54"},
-                {"category":"default","industry":"MANFCT","orgsize":"SM","region":"W","total_n":"33","v1":"12.57","v2":"10.31","v3":"12.77","v4":"11.99","v5":"14.68","total":"62.32"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"all","region":"W","total_n":"220","v1":"13.28","v2":"11.2","v3":"12.18","v4":"11.71","v5":"13.45","total":"61.82"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"SM","region":"W","total_n":"130","v1":"12.53","v2":"9.18","v3":"11.17","v4":"10.91","v5":"12.77","total":"56.56"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"MD","region":"W","total_n":"44","v1":"14.82","v2":"14.34","v3":"13.81","v4":"13.13","v5":"14.32","total":"70.42"},
-                {"category":"default","industry":"R_W_T_U","orgsize":"XL","region":"W","total_n":"39","v1":"13.23","v2":"13.77","v3":"12.95","v4":"12.13","v5":"14.28","total":"66.36"},
-                {"category":"default","industry":"FINANCE","orgsize":"all","region":"W","total_n":"100","v1":"13.91","v2":"12.83","v3":"13.51","v4":"12.42","v5":"14.11","total":"66.78"},
-                {"category":"default","industry":"FINANCE","orgsize":"SM","region":"W","total_n":"46","v1":"13.45","v2":"11.36","v3":"12.66","v4":"12.32","v5":"13.97","total":"63.76"},
-                {"category":"default","industry":"FINANCE","orgsize":"MD","region":"W","total_n":"24","v1":"13.92","v2":"12.94","v3":"13.74","v4":"12.47","v5":"14.72","total":"67.79"},
-                {"category":"default","industry":"PROFBUS","orgsize":"all","region":"W","total_n":"78","v1":"14.88","v2":"13.63","v3":"14.48","v4":"14.07","v5":"15.39","total":"72.45"},
-                {"category":"default","industry":"PROFBUS","orgsize":"SM","region":"W","total_n":"43","v1":"15.76","v2":"13.75","v3":"14.66","v4":"14.92","v5":"16.06","total":"75.15"},
-                {"category":"default","industry":"OTHSERV","orgsize":"all","region":"W","total_n":"101","v1":"14.56","v2":"12.69","v3":"14.03","v4":"12.86","v5":"13.68","total":"67.82"},
-                {"category":"default","industry":"OTHSERV","orgsize":"SM","region":"W","total_n":"72","v1":"14.78","v2":"11.72","v3":"14.38","v4":"12.64","v5":"13.28","total":"66.8"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"all","region":"W","total_n":"201","v1":"14.21","v2":"14.42","v3":"13.38","v4":"12.09","v5":"14.08","total":"68.18"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"SM","region":"W","total_n":"26","v1":"14.36","v2":"12.12","v3":"13.5","v4":"12.49","v5":"14.66","total":"67.13"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"MD","region":"W","total_n":"66","v1":"13.31","v2":"12.43","v3":"12.54","v4":"11.45","v5":"12.2","total":"61.93"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"LG","region":"W","total_n":"58","v1":"15.07","v2":"16.43","v3":"14.03","v4":"12.87","v5":"14.6","total":"73.0"},
-                {"category":"default","industry":"GOVTEDU","orgsize":"XL","region":"W","total_n":"52","v1":"14.33","v2":"15.87","v3":"13.67","v4":"11.84","v5":"15.58","total":"71.29"},
-                {"category":"default","industry":"HLTHSS","orgsize":"all","region":"W","total_n":"152","v1":"14.25","v2":"13.46","v3":"13.52","v4":"13.03","v5":"14.54","total":"68.8"},
-                {"category":"default","industry":"HLTHSS","orgsize":"SM","region":"W","total_n":"77","v1":"14.45","v2":"13.69","v3":"13.82","v4":"13.49","v5":"14.69","total":"70.14"},
-                {"category":"default","industry":"HLTHSS","orgsize":"MD","region":"W","total_n":"36","v1":"13.73","v2":"12.46","v3":"12.26","v4":"12.05","v5":"14.47","total":"64.97"},
-                {"category":"default","industry":"HLTHSS","orgsize":"LG","region":"W","total_n":"24","v1":"14.48","v2":"13.35","v3":"14.3","v4":"13.21","v5":"14.25","total":"69.59"},
-                {"category":"default","industry":"LSHOSP","orgsize":"all","region":"W","total_n":"108","v1":"14.71","v2":"13.01","v3":"13.23","v4":"13.24","v5":"15.01","total":"69.2"},
-                {"category":"default","industry":"LSHOSP","orgsize":"SM","region":"W","total_n":"56","v1":"14.09","v2":"12.1","v3":"12.31","v4":"12.31","v5":"15.04","total":"65.85"},
-                {"category":"default","industry":"LSHOSP","orgsize":"MD","region":"W","total_n":"25","v1":"15.25","v2":"14.16","v3":"14.28","v4":"14.96","v5":"14.86","total":"73.51"},
-                {"category":"default","industry":"OTHER","orgsize":"all","region":"W","total_n":"42","v1":"16.7","v2":"16.31","v3":"16.67","v4":"15.84","v5":"17.43","total":"82.95"},
-                {"category":"default","industry":"OTHER","orgsize":"SM","region":"W","total_n":"37","v1":"16.66","v2":"16.3","v3":"16.65","v4":"15.7","v5":"17.42","total":"82.73"}
+                {"eventCategory":"default","industry":"all","orgsize":"all","region":"all","total_n":"5048","v1":"13.74","v2":"12.55","v3":"12.86","v4":"12.34","v5":"13.93","total":"65.42"},
+                {"eventCategory":"default","industry":"all","orgsize":"SM","region":"all","total_n":"2350","v1":"13.92","v2":"11.91","v3":"12.83","v4":"12.5","v5":"14.28","total":"65.44"},
+                {"eventCategory":"default","industry":"all","orgsize":"MD","region":"all","total_n":"1231","v1":"13.53","v2":"12.48","v3":"12.56","v4":"12.17","v5":"13.37","total":"64.11"},
+                {"eventCategory":"default","industry":"all","orgsize":"LG","region":"all","total_n":"765","v1":"13.59","v2":"13.27","v3":"12.9","v4":"12.3","v5":"13.8","total":"65.86"},
+                {"eventCategory":"default","industry":"all","orgsize":"XL","region":"all","total_n":"690","v1":"13.64","v2":"14.11","v3":"13.45","v4":"12.16","v5":"13.89","total":"67.25"},
+                {"eventCategory":"default","industry":"CONSTR","orgsize":"all","region":"all","total_n":"273","v1":"14.29","v2":"11.83","v3":"13.18","v4":"13.39","v5":"14.73","total":"67.42"},
+                {"eventCategory":"default","industry":"CONSTR","orgsize":"SM","region":"all","total_n":"183","v1":"14.37","v2":"11.61","v3":"13.37","v4":"13.98","v5":"15.15","total":"68.48"},
+                {"eventCategory":"default","industry":"CONSTR","orgsize":"MD","region":"all","total_n":"53","v1":"14.16","v2":"12.28","v3":"12.32","v4":"12.28","v5":"14.2","total":"65.24"},
+                {"eventCategory":"default","industry":"CONSTR","orgsize":"LG","region":"all","total_n":"27","v1":"14.46","v2":"12.63","v3":"14.04","v4":"12.61","v5":"13.78","total":"67.52"},
+                {"eventCategory":"default","industry":"MANFCT","orgsize":"all","region":"all","total_n":"405","v1":"12.48","v2":"10.95","v3":"11.93","v4":"11.43","v5":"13.12","total":"59.91"},
+                {"eventCategory":"default","industry":"MANFCT","orgsize":"SM","region":"all","total_n":"153","v1":"12.16","v2":"10.02","v3":"11.7","v4":"12.03","v5":"14.11","total":"60.02"},
+                {"eventCategory":"default","industry":"MANFCT","orgsize":"MD","region":"all","total_n":"152","v1":"12.6","v2":"10.95","v3":"12.02","v4":"10.83","v5":"11.72","total":"58.12"},
+                {"eventCategory":"default","industry":"MANFCT","orgsize":"LG","region":"all","total_n":"61","v1":"12.67","v2":"11.58","v3":"11.62","v4":"11.0","v5":"13.71","total":"60.58"},
+                {"eventCategory":"default","industry":"MANFCT","orgsize":"XL","region":"all","total_n":"38","v1":"12.95","v2":"13.74","v3":"13.0","v4":"12.11","v5":"13.8","total":"65.6"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"all","region":"all","total_n":"893","v1":"13.11","v2":"11.6","v3":"12.13","v4":"11.78","v5":"13.2","total":"61.82"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"SM","region":"all","total_n":"438","v1":"12.78","v2":"10.44","v3":"11.45","v4":"11.29","v5":"12.88","total":"58.84"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"MD","region":"all","total_n":"211","v1":"13.64","v2":"12.63","v3":"12.85","v4":"12.37","v5":"13.31","total":"64.8"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"LG","region":"all","total_n":"96","v1":"12.94","v2":"12.6","v3":"11.97","v4":"12.03","v5":"13.91","total":"63.45"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"XL","region":"all","total_n":"146","v1":"13.49","v2":"12.99","v3":"13.27","v4":"12.26","v5":"13.6","total":"65.61"},
+                {"eventCategory":"default","industry":"FINANCE","orgsize":"all","region":"all","total_n":"410","v1":"14.27","v2":"13.08","v3":"13.73","v4":"12.98","v5":"14.39","total":"68.45"},
+                {"eventCategory":"default","industry":"FINANCE","orgsize":"SM","region":"all","total_n":"187","v1":"14.01","v2":"11.86","v3":"12.95","v4":"12.42","v5":"14.43","total":"65.67"},
+                {"eventCategory":"default","industry":"FINANCE","orgsize":"MD","region":"all","total_n":"83","v1":"14.33","v2":"12.5","v3":"13.44","v4":"12.78","v5":"14.17","total":"67.22"},
+                {"eventCategory":"default","industry":"FINANCE","orgsize":"LG","region":"all","total_n":"72","v1":"14.03","v2":"14.28","v3":"14.27","v4":"13.25","v5":"13.71","total":"69.54"},
+                {"eventCategory":"default","industry":"FINANCE","orgsize":"XL","region":"all","total_n":"68","v1":"15.21","v2":"15.87","v3":"15.68","v4":"14.47","v5":"15.25","total":"76.48"},
+                {"eventCategory":"default","industry":"PROFBUS","orgsize":"all","region":"all","total_n":"308","v1":"14.95","v2":"13.81","v3":"14.35","v4":"13.54","v5":"15.23","total":"71.88"},
+                {"eventCategory":"default","industry":"PROFBUS","orgsize":"SM","region":"all","total_n":"180","v1":"15.18","v2":"13.61","v3":"14.3","v4":"13.66","v5":"15.2","total":"71.95"},
+                {"eventCategory":"default","industry":"PROFBUS","orgsize":"MD","region":"all","total_n":"57","v1":"14.2","v2":"12.87","v3":"13.25","v4":"12.67","v5":"14.95","total":"67.94"},
+                {"eventCategory":"default","industry":"PROFBUS","orgsize":"LG","region":"all","total_n":"41","v1":"14.41","v2":"14.94","v3":"14.98","v4":"13.34","v5":"15.35","total":"73.02"},
+                {"eventCategory":"default","industry":"PROFBUS","orgsize":"XL","region":"all","total_n":"30","v1":"15.7","v2":"15.24","v3":"15.91","v4":"14.74","v5":"15.81","total":"77.4"},
+                {"eventCategory":"default","industry":"OTHSERV","orgsize":"all","region":"all","total_n":"432","v1":"14.21","v2":"12.59","v3":"13.38","v4":"13.31","v5":"13.97","total":"67.46"},
+                {"eventCategory":"default","industry":"OTHSERV","orgsize":"SM","region":"all","total_n":"224","v1":"15.15","v2":"12.53","v3":"14.08","v4":"13.47","v5":"14.21","total":"69.44"},
+                {"eventCategory":"default","industry":"OTHSERV","orgsize":"MD","region":"all","total_n":"119","v1":"14.45","v2":"13.62","v3":"13.98","v4":"14.11","v5":"14.71","total":"70.87"},
+                {"eventCategory":"default","industry":"OTHSERV","orgsize":"LG","region":"all","total_n":"65","v1":"12.44","v2":"11.34","v3":"11.15","v4":"12.65","v5":"13.03","total":"60.61"},
+                {"eventCategory":"default","industry":"OTHSERV","orgsize":"XL","region":"all","total_n":"24","v1":"9.01","v2":"11.49","v3":"9.93","v4":"9.61","v5":"10.52","total":"50.56"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"all","region":"all","total_n":"914","v1":"13.62","v2":"13.44","v3":"12.61","v4":"11.49","v5":"13.39","total":"64.55"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"SM","region":"all","total_n":"170","v1":"14.39","v2":"11.86","v3":"12.75","v4":"11.51","v5":"14.23","total":"64.74"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"MD","region":"all","total_n":"220","v1":"13.41","v2":"12.74","v3":"11.98","v4":"11.44","v5":"12.86","total":"62.43"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"LG","region":"all","total_n":"258","v1":"13.62","v2":"14.05","v3":"12.76","v4":"11.92","v5":"13.3","total":"65.65"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"XL","region":"all","total_n":"266","v1":"13.32","v2":"14.44","v3":"12.87","v4":"11.1","v5":"13.37","total":"65.1"},
+                {"eventCategory":"default","industry":"HLTHSS","orgsize":"all","region":"all","total_n":"681","v1":"13.63","v2":"13.07","v3":"13.03","v4":"12.27","v5":"14.01","total":"66.01"},
+                {"eventCategory":"default","industry":"HLTHSS","orgsize":"SM","region":"all","total_n":"334","v1":"13.59","v2":"13.02","v3":"13.0","v4":"12.31","v5":"13.99","total":"65.91"},
+                {"eventCategory":"default","industry":"HLTHSS","orgsize":"MD","region":"all","total_n":"182","v1":"13.41","v2":"12.58","v3":"12.5","v4":"12.0","v5":"13.84","total":"64.33"},
+                {"eventCategory":"default","industry":"HLTHSS","orgsize":"LG","region":"all","total_n":"90","v1":"13.78","v2":"13.13","v3":"13.29","v4":"12.06","v5":"13.62","total":"65.88"},
+                {"eventCategory":"default","industry":"HLTHSS","orgsize":"XL","region":"all","total_n":"73","v1":"14.24","v2":"14.47","v3":"14.21","v4":"13.04","v5":"15.01","total":"70.97"},
+                {"eventCategory":"default","industry":"LSHOSP","orgsize":"all","region":"all","total_n":"543","v1":"13.45","v2":"11.72","v3":"12.24","v4":"12.24","v5":"14.15","total":"63.8"},
+                {"eventCategory":"default","industry":"LSHOSP","orgsize":"SM","region":"all","total_n":"330","v1":"13.48","v2":"11.34","v3":"12.2","v4":"12.03","v5":"14.48","total":"63.53"},
+                {"eventCategory":"default","industry":"LSHOSP","orgsize":"MD","region":"all","total_n":"136","v1":"12.65","v2":"11.93","v3":"11.44","v4":"12.0","v5":"12.5","total":"60.52"},
+                {"eventCategory":"default","industry":"LSHOSP","orgsize":"LG","region":"all","total_n":"45","v1":"14.93","v2":"12.5","v3":"13.98","v4":"14.17","v5":"16.18","total":"71.76"},
+                {"eventCategory":"default","industry":"LSHOSP","orgsize":"XL","region":"all","total_n":"31","v1":"14.42","v2":"13.73","v3":"13.56","v4":"12.74","v5":"14.92","total":"69.37"},
+                {"eventCategory":"default","industry":"OTHER","orgsize":"all","region":"all","total_n":"180","v1":"16.18","v2":"14.54","v3":"14.78","v4":"14.56","v5":"16.55","total":"76.61"},
+                {"eventCategory":"default","industry":"OTHER","orgsize":"SM","region":"all","total_n":"148","v1":"16.25","v2":"14.39","v3":"14.73","v4":"14.49","v5":"16.56","total":"76.42"},
+                {"eventCategory":"default","industry":"all","orgsize":"all","region":"NE","total_n":"861","v1":"13.73","v2":"12.58","v3":"12.81","v4":"12.2","v5":"14.03","total":"65.35"},
+                {"eventCategory":"default","industry":"all","orgsize":"SM","region":"NE","total_n":"424","v1":"13.95","v2":"11.96","v3":"12.56","v4":"12.24","v5":"14.59","total":"65.3"},
+                {"eventCategory":"default","industry":"all","orgsize":"MD","region":"NE","total_n":"197","v1":"13.3","v2":"12.21","v3":"12.33","v4":"11.55","v5":"12.88","total":"62.27"},
+                {"eventCategory":"default","industry":"all","orgsize":"LG","region":"NE","total_n":"132","v1":"13.42","v2":"14.1","v3":"13.35","v4":"12.71","v5":"13.97","total":"67.55"},
+                {"eventCategory":"default","industry":"all","orgsize":"XL","region":"NE","total_n":"107","v1":"14.02","v2":"13.89","v3":"14.02","v4":"12.64","v5":"13.99","total":"68.56"},
+                {"eventCategory":"default","industry":"CONSTR","orgsize":"all","region":"NE","total_n":"46","v1":"15.52","v2":"11.79","v3":"13.73","v4":"13.43","v5":"15.51","total":"69.98"},
+                {"eventCategory":"default","industry":"CONSTR","orgsize":"SM","region":"NE","total_n":"29","v1":"15.58","v2":"12.0","v3":"14.74","v4":"14.61","v5":"16.49","total":"73.42"},
+                {"eventCategory":"default","industry":"MANFCT","orgsize":"all","region":"NE","total_n":"65","v1":"13.87","v2":"11.16","v3":"12.87","v4":"12.45","v5":"14.15","total":"64.5"},
+                {"eventCategory":"default","industry":"MANFCT","orgsize":"SM","region":"NE","total_n":"30","v1":"14.2","v2":"10.48","v3":"12.54","v4":"12.29","v5":"14.78","total":"64.29"},
+                {"eventCategory":"default","industry":"MANFCT","orgsize":"MD","region":"NE","total_n":"20","v1":"14.47","v2":"11.15","v3":"13.23","v4":"12.56","v5":"12.05","total":"63.46"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"all","region":"NE","total_n":"186","v1":"13.36","v2":"11.86","v3":"12.8","v4":"12.27","v5":"13.59","total":"63.88"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"SM","region":"NE","total_n":"94","v1":"12.83","v2":"10.99","v3":"11.62","v4":"11.54","v5":"13.97","total":"60.95"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"MD","region":"NE","total_n":"42","v1":"12.69","v2":"12.1","v3":"13.44","v4":"12.15","v5":"12.32","total":"62.7"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"LG","region":"NE","total_n":"21","v1":"14.2","v2":"14.74","v3":"13.99","v4":"13.26","v5":"15.59","total":"71.78"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"XL","region":"NE","total_n":"29","v1":"15.49","v2":"12.29","v3":"14.89","v4":"14.17","v5":"12.72","total":"69.56"},
+                {"eventCategory":"default","industry":"FINANCE","orgsize":"all","region":"NE","total_n":"73","v1":"14.38","v2":"11.99","v3":"13.51","v4":"12.89","v5":"14.67","total":"67.44"},
+                {"eventCategory":"default","industry":"FINANCE","orgsize":"SM","region":"NE","total_n":"35","v1":"14.19","v2":"10.01","v3":"12.18","v4":"11.88","v5":"14.39","total":"62.65"},
+                {"eventCategory":"default","industry":"PROFBUS","orgsize":"all","region":"NE","total_n":"65","v1":"15.31","v2":"14.62","v3":"14.47","v4":"13.6","v5":"15.87","total":"73.87"},
+                {"eventCategory":"default","industry":"PROFBUS","orgsize":"SM","region":"NE","total_n":"34","v1":"15.95","v2":"14.69","v3":"14.7","v4":"13.42","v5":"16.15","total":"74.91"},
+                {"eventCategory":"default","industry":"OTHSERV","orgsize":"all","region":"NE","total_n":"59","v1":"12.66","v2":"10.75","v3":"11.68","v4":"11.3","v5":"12.4","total":"58.79"},
+                {"eventCategory":"default","industry":"OTHSERV","orgsize":"SM","region":"NE","total_n":"22","v1":"12.77","v2":"8.64","v3":"11.95","v4":"9.95","v5":"12.77","total":"56.08"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"all","region":"NE","total_n":"129","v1":"12.9","v2":"13.82","v3":"12.29","v4":"10.65","v5":"13.66","total":"63.32"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"SM","region":"NE","total_n":"41","v1":"12.97","v2":"11.4","v3":"11.66","v4":"9.99","v5":"14.55","total":"60.57"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"MD","region":"NE","total_n":"21","v1":"14.38","v2":"15.84","v3":"13.87","v4":"11.75","v5":"14.87","total":"70.71"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"LG","region":"NE","total_n":"38","v1":"13.23","v2":"14.27","v3":"12.29","v4":"11.64","v5":"12.09","total":"63.52"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"XL","region":"NE","total_n":"30","v1":"11.33","v2":"15.11","v3":"12.0","v4":"9.54","v5":"13.57","total":"61.55"},
+                {"eventCategory":"default","industry":"HLTHSS","orgsize":"all","region":"NE","total_n":"141","v1":"12.84","v2":"13.18","v3":"12.49","v4":"11.87","v5":"13.16","total":"63.54"},
+                {"eventCategory":"default","industry":"HLTHSS","orgsize":"SM","region":"NE","total_n":"73","v1":"12.85","v2":"13.25","v3":"12.5","v4":"11.96","v5":"12.81","total":"63.37"},
+                {"eventCategory":"default","industry":"HLTHSS","orgsize":"MD","region":"NE","total_n":"35","v1":"11.39","v2":"12.17","v3":"10.42","v4":"9.98","v5":"11.93","total":"55.89"},
+                {"eventCategory":"default","industry":"LSHOSP","orgsize":"all","region":"NE","total_n":"63","v1":"13.56","v2":"12.0","v3":"12.12","v4":"11.2","v5":"13.67","total":"62.55"},
+                {"eventCategory":"default","industry":"LSHOSP","orgsize":"SM","region":"NE","total_n":"37","v1":"14.14","v2":"12.85","v3":"12.69","v4":"12.68","v5":"15.4","total":"67.76"},
+                {"eventCategory":"default","industry":"OTHER","orgsize":"all","region":"NE","total_n":"33","v1":"17.4","v2":"14.87","v3":"13.43","v4":"16.0","v5":"17.63","total":"79.33"},
+                {"eventCategory":"default","industry":"OTHER","orgsize":"SM","region":"NE","total_n":"28","v1":"17.66","v2":"14.7","v3":"13.13","v4":"15.95","v5":"17.68","total":"79.12"},
+                {"eventCategory":"default","industry":"all","orgsize":"all","region":"M","total_n":"1180","v1":"13.65","v2":"12.31","v3":"12.81","v4":"11.97","v5":"13.7","total":"64.44"},
+                {"eventCategory":"default","industry":"all","orgsize":"SM","region":"M","total_n":"539","v1":"14.19","v2":"12.17","v3":"13.21","v4":"12.25","v5":"14.24","total":"66.06"},
+                {"eventCategory":"default","industry":"all","orgsize":"MD","region":"M","total_n":"304","v1":"12.93","v2":"11.53","v3":"11.81","v4":"11.17","v5":"13.14","total":"60.58"},
+                {"eventCategory":"default","industry":"all","orgsize":"LG","region":"M","total_n":"181","v1":"13.13","v2":"12.51","v3":"12.49","v4":"11.74","v5":"13.02","total":"62.89"},
+                {"eventCategory":"default","industry":"all","orgsize":"XL","region":"M","total_n":"153","v1":"13.86","v2":"14.29","v3":"13.86","v4":"12.9","v5":"13.81","total":"68.72"},
+                {"eventCategory":"default","industry":"CONSTR","orgsize":"all","region":"M","total_n":"43","v1":"14.48","v2":"12.08","v3":"12.13","v4":"12.13","v5":"13.25","total":"64.07"},
+                {"eventCategory":"default","industry":"CONSTR","orgsize":"SM","region":"M","total_n":"25","v1":"13.74","v2":"11.47","v3":"11.47","v4":"12.69","v5":"13.42","total":"62.79"},
+                {"eventCategory":"default","industry":"MANFCT","orgsize":"all","region":"M","total_n":"122","v1":"12.5","v2":"11.13","v3":"11.5","v4":"11.04","v5":"13.6","total":"59.77"},
+                {"eventCategory":"default","industry":"MANFCT","orgsize":"SM","region":"M","total_n":"33","v1":"13.74","v2":"12.24","v3":"12.21","v4":"12.13","v5":"14.47","total":"64.79"},
+                {"eventCategory":"default","industry":"MANFCT","orgsize":"MD","region":"M","total_n":"57","v1":"12.14","v2":"10.14","v3":"11.06","v4":"10.42","v5":"13.43","total":"57.19"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"all","region":"M","total_n":"184","v1":"12.91","v2":"11.38","v3":"12.0","v4":"11.59","v5":"12.83","total":"60.71"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"SM","region":"M","total_n":"86","v1":"13.5","v2":"11.21","v3":"12.3","v4":"11.8","v5":"13.05","total":"61.86"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"MD","region":"M","total_n":"42","v1":"13.04","v2":"11.18","v3":"11.74","v4":"12.18","v5":"11.94","total":"60.08"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"LG","region":"M","total_n":"22","v1":"11.97","v2":"11.29","v3":"11.21","v4":"10.26","v5":"12.52","total":"57.25"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"XL","region":"M","total_n":"32","v1":"11.88","v2":"12.49","v3":"12.32","v4":"11.42","v5":"13.9","total":"62.01"},
+                {"eventCategory":"default","industry":"FINANCE","orgsize":"all","region":"M","total_n":"100","v1":"14.61","v2":"14.04","v3":"14.54","v4":"13.65","v5":"15.06","total":"71.9"},
+                {"eventCategory":"default","industry":"FINANCE","orgsize":"SM","region":"M","total_n":"46","v1":"15.12","v2":"13.35","v3":"14.48","v4":"13.56","v5":"15.28","total":"71.79"},
+                {"eventCategory":"default","industry":"FINANCE","orgsize":"MD","region":"M","total_n":"21","v1":"13.4","v2":"13.11","v3":"13.43","v4":"13.08","v5":"15.88","total":"68.9"},
+                {"eventCategory":"default","industry":"PROFBUS","orgsize":"all","region":"M","total_n":"57","v1":"14.89","v2":"13.3","v3":"13.61","v4":"12.21","v5":"15.04","total":"69.05"},
+                {"eventCategory":"default","industry":"PROFBUS","orgsize":"SM","region":"M","total_n":"40","v1":"14.44","v2":"12.9","v3":"13.13","v4":"11.98","v5":"14.8","total":"67.25"},
+                {"eventCategory":"default","industry":"OTHSERV","orgsize":"all","region":"M","total_n":"105","v1":"15.17","v2":"13.22","v3":"14.96","v4":"13.78","v5":"15.38","total":"72.51"},
+                {"eventCategory":"default","industry":"OTHSERV","orgsize":"SM","region":"M","total_n":"49","v1":"14.85","v2":"13.42","v3":"14.58","v4":"12.72","v5":"15.5","total":"71.07"},
+                {"eventCategory":"default","industry":"OTHSERV","orgsize":"MD","region":"M","total_n":"35","v1":"15.1","v2":"14.21","v3":"16.11","v4":"14.58","v5":"15.53","total":"75.53"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"all","region":"M","total_n":"229","v1":"13.72","v2":"13.08","v3":"12.53","v4":"11.79","v5":"12.88","total":"64.0"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"SM","region":"M","total_n":"52","v1":"16.11","v2":"13.11","v3":"14.12","v4":"13.21","v5":"14.41","total":"70.96"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"MD","region":"M","total_n":"61","v1":"12.53","v2":"11.18","v3":"10.21","v4":"10.05","v5":"12.92","total":"56.89"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"LG","region":"M","total_n":"56","v1":"12.34","v2":"13.31","v3":"12.26","v4":"11.28","v5":"12.23","total":"61.42"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"XL","region":"M","total_n":"60","v1":"14.13","v2":"14.77","v3":"13.74","v4":"12.78","v5":"12.1","total":"67.52"},
+                {"eventCategory":"default","industry":"HLTHSS","orgsize":"all","region":"M","total_n":"171","v1":"13.47","v2":"12.59","v3":"12.79","v4":"11.51","v5":"13.69","total":"64.05"},
+                {"eventCategory":"default","industry":"HLTHSS","orgsize":"SM","region":"M","total_n":"85","v1":"13.66","v2":"12.91","v3":"12.85","v4":"11.47","v5":"13.86","total":"64.75"},
+                {"eventCategory":"default","industry":"HLTHSS","orgsize":"MD","region":"M","total_n":"45","v1":"13.37","v2":"11.31","v3":"12.4","v4":"11.6","v5":"13.58","total":"62.26"},
+                {"eventCategory":"default","industry":"HLTHSS","orgsize":"LG","region":"M","total_n":"24","v1":"13.14","v2":"12.6","v3":"12.74","v4":"10.67","v5":"12.59","total":"61.74"},
+                {"eventCategory":"default","industry":"LSHOSP","orgsize":"all","region":"M","total_n":"127","v1":"12.33","v2":"10.26","v3":"11.56","v4":"10.9","v5":"12.96","total":"58.01"},
+                {"eventCategory":"default","industry":"LSHOSP","orgsize":"SM","region":"M","total_n":"86","v1":"12.8","v2":"9.96","v3":"12.33","v4":"11.43","v5":"13.51","total":"60.03"},
+                {"eventCategory":"default","industry":"LSHOSP","orgsize":"MD","region":"M","total_n":"26","v1":"8.96","v2":"10.28","v3":"7.84","v4":"6.99","v5":"9.28","total":"43.35"},
+                {"eventCategory":"default","industry":"OTHER","orgsize":"all","region":"M","total_n":"42","v1":"15.85","v2":"13.28","v3":"15.58","v4":"13.35","v5":"15.94","total":"74.0"},
+                {"eventCategory":"default","industry":"OTHER","orgsize":"SM","region":"M","total_n":"36","v1":"16.03","v2":"13.03","v3":"15.8","v4":"13.67","v5":"16.2","total":"74.73"},
+                {"eventCategory":"default","industry":"all","orgsize":"all","region":"S","total_n":"1847","v1":"13.55","v2":"12.47","v3":"12.61","v4":"12.45","v5":"13.8","total":"64.88"},
+                {"eventCategory":"default","industry":"all","orgsize":"SM","region":"S","total_n":"808","v1":"13.62","v2":"11.78","v3":"12.48","v4":"12.62","v5":"14.12","total":"64.62"},
+                {"eventCategory":"default","industry":"all","orgsize":"MD","region":"S","total_n":"474","v1":"13.83","v2":"12.88","v3":"12.89","v4":"12.95","v5":"13.49","total":"66.04"},
+                {"eventCategory":"default","industry":"all","orgsize":"LG","region":"S","total_n":"292","v1":"13.32","v2":"12.68","v3":"12.28","v4":"12.13","v5":"13.84","total":"64.25"},
+                {"eventCategory":"default","industry":"all","orgsize":"XL","region":"S","total_n":"272","v1":"13.12","v2":"13.6","v3":"12.85","v4":"11.4","v5":"13.36","total":"64.33"},
+                {"eventCategory":"default","industry":"CONSTR","orgsize":"all","region":"S","total_n":"100","v1":"13.7","v2":"11.38","v3":"13.31","v4":"13.84","v5":"15.0","total":"67.23"},
+                {"eventCategory":"default","industry":"CONSTR","orgsize":"SM","region":"S","total_n":"71","v1":"13.95","v2":"11.37","v3":"13.49","v4":"14.4","v5":"15.73","total":"68.94"},
+                {"eventCategory":"default","industry":"MANFCT","orgsize":"all","region":"S","total_n":"152","v1":"11.85","v2":"10.83","v3":"11.73","v4":"11.6","v5":"12.2","total":"58.21"},
+                {"eventCategory":"default","industry":"MANFCT","orgsize":"SM","region":"S","total_n":"57","v1":"9.93","v2":"8.32","v3":"10.34","v4":"11.86","v5":"13.2","total":"53.65"},
+                {"eventCategory":"default","industry":"MANFCT","orgsize":"MD","region":"S","total_n":"60","v1":"12.73","v2":"12.06","v3":"12.87","v4":"11.52","v5":"10.42","total":"59.6"},
+                {"eventCategory":"default","industry":"MANFCT","orgsize":"LG","region":"S","total_n":"20","v1":"14.66","v2":"12.65","v3":"12.03","v4":"11.82","v5":"14.42","total":"65.58"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"all","region":"S","total_n":"304","v1":"12.97","v2":"11.86","v3":"11.75","v4":"11.63","v5":"13.01","total":"61.22"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"SM","region":"S","total_n":"128","v1":"12.52","v2":"10.8","v3":"11.06","v4":"11.17","v5":"12.09","total":"57.64"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"MD","region":"S","total_n":"84","v1":"13.81","v2":"12.72","v3":"12.6","v4":"12.17","v5":"13.96","total":"65.26"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"LG","region":"S","total_n":"45","v1":"12.06","v2":"11.94","v3":"10.71","v4":"11.83","v5":"13.52","total":"60.06"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"XL","region":"S","total_n":"47","v1":"13.57","v2":"13.1","v3":"13.19","v4":"11.78","v5":"13.39","total":"65.03"},
+                {"eventCategory":"default","industry":"FINANCE","orgsize":"all","region":"S","total_n":"137","v1":"14.23","v2":"13.13","v3":"13.42","v4":"12.94","v5":"13.95","total":"67.67"},
+                {"eventCategory":"default","industry":"FINANCE","orgsize":"SM","region":"S","total_n":"61","v1":"13.49","v2":"12.19","v3":"12.47","v4":"11.95","v5":"14.17","total":"64.27"},
+                {"eventCategory":"default","industry":"FINANCE","orgsize":"MD","region":"S","total_n":"28","v1":"15.61","v2":"12.19","v3":"13.17","v4":"13.01","v5":"12.76","total":"66.74"},
+                {"eventCategory":"default","industry":"FINANCE","orgsize":"LG","region":"S","total_n":"24","v1":"13.55","v2":"13.51","v3":"13.82","v4":"13.22","v5":"14.1","total":"68.2"},
+                {"eventCategory":"default","industry":"FINANCE","orgsize":"XL","region":"S","total_n":"25","v1":"15.17","v2":"16.13","v3":"15.66","v4":"15.02","v5":"14.6","total":"76.58"},
+                {"eventCategory":"default","industry":"PROFBUS","orgsize":"all","region":"S","total_n":"109","v1":"14.81","v2":"13.72","v3":"14.58","v4":"13.81","v5":"14.85","total":"71.77"},
+                {"eventCategory":"default","industry":"PROFBUS","orgsize":"SM","region":"S","total_n":"63","v1":"14.85","v2":"13.38","v3":"14.59","v4":"14.02","v5":"14.34","total":"71.18"},
+                {"eventCategory":"default","industry":"OTHSERV","orgsize":"all","region":"S","total_n":"167","v1":"13.95","v2":"12.8","v3":"12.61","v4":"14.01","v5":"13.81","total":"67.18"},
+                {"eventCategory":"default","industry":"OTHSERV","orgsize":"SM","region":"S","total_n":"81","v1":"16.31","v2":"13.77","v3":"14.09","v4":"15.62","v5":"14.65","total":"74.44"},
+                {"eventCategory":"default","industry":"OTHSERV","orgsize":"MD","region":"S","total_n":"53","v1":"13.21","v2":"12.84","v3":"12.81","v4":"13.82","v5":"14.04","total":"66.72"},
+                {"eventCategory":"default","industry":"OTHSERV","orgsize":"LG","region":"S","total_n":"21","v1":"11.54","v2":"11.83","v3":"9.44","v4":"12.06","v5":"13.1","total":"57.97"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"all","region":"S","total_n":"355","v1":"13.49","v2":"12.99","v3":"12.33","v4":"11.27","v5":"13.23","total":"63.31"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"SM","region":"S","total_n":"51","v1":"13.77","v2":"10.8","v3":"11.82","v4":"10.46","v5":"13.57","total":"60.42"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"MD","region":"S","total_n":"72","v1":"13.95","v2":"13.44","v3":"12.41","v4":"12.53","v5":"12.82","total":"65.15"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"LG","region":"S","total_n":"108","v1":"13.65","v2":"13.09","v3":"12.51","v4":"11.85","v5":"13.59","total":"64.69"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"XL","region":"S","total_n":"124","v1":"12.97","v2":"13.54","v3":"12.32","v4":"10.36","v5":"13.02","total":"62.21"},
+                {"eventCategory":"default","industry":"HLTHSS","orgsize":"all","region":"S","total_n":"217","v1":"13.85","v2":"13.1","v3":"13.23","v4":"12.6","v5":"14.44","total":"67.22"},
+                {"eventCategory":"default","industry":"HLTHSS","orgsize":"SM","region":"S","total_n":"98","v1":"13.41","v2":"12.42","v3":"12.88","v4":"12.39","v5":"14.45","total":"65.55"},
+                {"eventCategory":"default","industry":"HLTHSS","orgsize":"MD","region":"S","total_n":"66","v1":"14.34","v2":"13.72","v3":"13.83","v4":"13.31","v5":"14.7","total":"69.9"},
+                {"eventCategory":"default","industry":"HLTHSS","orgsize":"LG","region":"S","total_n":"27","v1":"13.89","v2":"12.8","v3":"12.42","v4":"11.79","v5":"13.39","total":"64.29"},
+                {"eventCategory":"default","industry":"HLTHSS","orgsize":"XL","region":"S","total_n":"25","v1":"14.21","v2":"14.51","v3":"13.96","v4":"12.46","v5":"14.87","total":"70.01"},
+                {"eventCategory":"default","industry":"LSHOSP","orgsize":"all","region":"S","total_n":"244","v1":"13.44","v2":"11.85","v3":"12.18","v4":"12.76","v5":"14.52","total":"64.75"},
+                {"eventCategory":"default","industry":"LSHOSP","orgsize":"SM","region":"S","total_n":"150","v1":"13.48","v2":"11.48","v3":"11.97","v4":"12.11","v5":"14.6","total":"63.64"},
+                {"eventCategory":"default","industry":"LSHOSP","orgsize":"MD","region":"S","total_n":"66","v1":"13.27","v2":"12.5","v3":"12.23","v4":"14.04","v5":"13.84","total":"65.88"},
+                {"eventCategory":"default","industry":"OTHER","orgsize":"all","region":"S","total_n":"62","v1":"15.33","v2":"14.0","v3":"13.68","v4":"13.67","v5":"15.73","total":"72.41"},
+                {"eventCategory":"default","industry":"OTHER","orgsize":"SM","region":"S","total_n":"48","v1":"15.19","v2":"13.74","v3":"13.4","v4":"13.26","v5":"15.47","total":"71.06"},
+                {"eventCategory":"default","industry":"all","orgsize":"all","region":"W","total_n":"1153","v1":"14.13","v2":"12.9","v3":"13.35","v4":"12.64","v5":"14.29","total":"67.31"},
+                {"eventCategory":"default","industry":"all","orgsize":"SM","region":"W","total_n":"579","v1":"14.08","v2":"11.81","v3":"13.18","v4":"12.73","v5":"14.31","total":"66.11"},
+                {"eventCategory":"default","industry":"all","orgsize":"MD","region":"W","total_n":"257","v1":"13.89","v2":"13.09","v3":"13.03","v4":"12.39","v5":"13.8","total":"66.2"},
+                {"eventCategory":"default","industry":"all","orgsize":"LG","region":"W","total_n":"159","v1":"14.75","v2":"14.52","v3":"14.12","v4":"12.93","v5":"14.49","total":"70.81"},
+                {"eventCategory":"default","industry":"all","orgsize":"XL","region":"W","total_n":"158","v1":"14.07","v2":"14.97","v3":"13.71","v4":"12.43","v5":"14.8","total":"69.98"},
+                {"eventCategory":"default","industry":"CONSTR","orgsize":"all","region":"W","total_n":"84","v1":"14.22","v2":"12.28","v3":"13.28","v4":"13.48","v5":"14.73","total":"67.99"},
+                {"eventCategory":"default","industry":"CONSTR","orgsize":"SM","region":"W","total_n":"58","v1":"14.54","v2":"11.77","v3":"13.36","v4":"13.71","v5":"14.49","total":"67.87"},
+                {"eventCategory":"default","industry":"MANFCT","orgsize":"all","region":"W","total_n":"66","v1":"12.48","v2":"10.69","v3":"12.25","v4":"10.78","v5":"13.34","total":"59.54"},
+                {"eventCategory":"default","industry":"MANFCT","orgsize":"SM","region":"W","total_n":"33","v1":"12.57","v2":"10.31","v3":"12.77","v4":"11.99","v5":"14.68","total":"62.32"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"all","region":"W","total_n":"220","v1":"13.28","v2":"11.2","v3":"12.18","v4":"11.71","v5":"13.45","total":"61.82"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"SM","region":"W","total_n":"130","v1":"12.53","v2":"9.18","v3":"11.17","v4":"10.91","v5":"12.77","total":"56.56"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"MD","region":"W","total_n":"44","v1":"14.82","v2":"14.34","v3":"13.81","v4":"13.13","v5":"14.32","total":"70.42"},
+                {"eventCategory":"default","industry":"R_W_T_U","orgsize":"XL","region":"W","total_n":"39","v1":"13.23","v2":"13.77","v3":"12.95","v4":"12.13","v5":"14.28","total":"66.36"},
+                {"eventCategory":"default","industry":"FINANCE","orgsize":"all","region":"W","total_n":"100","v1":"13.91","v2":"12.83","v3":"13.51","v4":"12.42","v5":"14.11","total":"66.78"},
+                {"eventCategory":"default","industry":"FINANCE","orgsize":"SM","region":"W","total_n":"46","v1":"13.45","v2":"11.36","v3":"12.66","v4":"12.32","v5":"13.97","total":"63.76"},
+                {"eventCategory":"default","industry":"FINANCE","orgsize":"MD","region":"W","total_n":"24","v1":"13.92","v2":"12.94","v3":"13.74","v4":"12.47","v5":"14.72","total":"67.79"},
+                {"eventCategory":"default","industry":"PROFBUS","orgsize":"all","region":"W","total_n":"78","v1":"14.88","v2":"13.63","v3":"14.48","v4":"14.07","v5":"15.39","total":"72.45"},
+                {"eventCategory":"default","industry":"PROFBUS","orgsize":"SM","region":"W","total_n":"43","v1":"15.76","v2":"13.75","v3":"14.66","v4":"14.92","v5":"16.06","total":"75.15"},
+                {"eventCategory":"default","industry":"OTHSERV","orgsize":"all","region":"W","total_n":"101","v1":"14.56","v2":"12.69","v3":"14.03","v4":"12.86","v5":"13.68","total":"67.82"},
+                {"eventCategory":"default","industry":"OTHSERV","orgsize":"SM","region":"W","total_n":"72","v1":"14.78","v2":"11.72","v3":"14.38","v4":"12.64","v5":"13.28","total":"66.8"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"all","region":"W","total_n":"201","v1":"14.21","v2":"14.42","v3":"13.38","v4":"12.09","v5":"14.08","total":"68.18"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"SM","region":"W","total_n":"26","v1":"14.36","v2":"12.12","v3":"13.5","v4":"12.49","v5":"14.66","total":"67.13"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"MD","region":"W","total_n":"66","v1":"13.31","v2":"12.43","v3":"12.54","v4":"11.45","v5":"12.2","total":"61.93"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"LG","region":"W","total_n":"58","v1":"15.07","v2":"16.43","v3":"14.03","v4":"12.87","v5":"14.6","total":"73.0"},
+                {"eventCategory":"default","industry":"GOVTEDU","orgsize":"XL","region":"W","total_n":"52","v1":"14.33","v2":"15.87","v3":"13.67","v4":"11.84","v5":"15.58","total":"71.29"},
+                {"eventCategory":"default","industry":"HLTHSS","orgsize":"all","region":"W","total_n":"152","v1":"14.25","v2":"13.46","v3":"13.52","v4":"13.03","v5":"14.54","total":"68.8"},
+                {"eventCategory":"default","industry":"HLTHSS","orgsize":"SM","region":"W","total_n":"77","v1":"14.45","v2":"13.69","v3":"13.82","v4":"13.49","v5":"14.69","total":"70.14"},
+                {"eventCategory":"default","industry":"HLTHSS","orgsize":"MD","region":"W","total_n":"36","v1":"13.73","v2":"12.46","v3":"12.26","v4":"12.05","v5":"14.47","total":"64.97"},
+                {"eventCategory":"default","industry":"HLTHSS","orgsize":"LG","region":"W","total_n":"24","v1":"14.48","v2":"13.35","v3":"14.3","v4":"13.21","v5":"14.25","total":"69.59"},
+                {"eventCategory":"default","industry":"LSHOSP","orgsize":"all","region":"W","total_n":"108","v1":"14.71","v2":"13.01","v3":"13.23","v4":"13.24","v5":"15.01","total":"69.2"},
+                {"eventCategory":"default","industry":"LSHOSP","orgsize":"SM","region":"W","total_n":"56","v1":"14.09","v2":"12.1","v3":"12.31","v4":"12.31","v5":"15.04","total":"65.85"},
+                {"eventCategory":"default","industry":"LSHOSP","orgsize":"MD","region":"W","total_n":"25","v1":"15.25","v2":"14.16","v3":"14.28","v4":"14.96","v5":"14.86","total":"73.51"},
+                {"eventCategory":"default","industry":"OTHER","orgsize":"all","region":"W","total_n":"42","v1":"16.7","v2":"16.31","v3":"16.67","v4":"15.84","v5":"17.43","total":"82.95"},
+                {"eventCategory":"default","industry":"OTHER","orgsize":"SM","region":"W","total_n":"37","v1":"16.66","v2":"16.3","v3":"16.65","v4":"15.7","v5":"17.42","total":"82.73"}
             ]
             
         </script>
@@ -1224,9 +1234,9 @@
                 <div class="col-1">&nbsp;</div>
             </div>
             <div class="row blackrow">
-                <div class="col-12">
-                    <select class="col-md-4 selectpicker navpicker oselect-drilldown hidden" data-size="9" data-bind="foreach: SHRM.utils.pageConfig.tabs">
-                        <option data-bind="text: name, attr: {value: id, json_category: json_category, tab_id: id}"></option>
+                <div class="col-12 nav_layer3">
+                    <select class="col-md-4 selectpicker navpicker select-drilldown hidden" data-size="9" data-bind="foreach: SHRM.utils.tabs">
+                        <option data-bind="text: name, attr: {value: id, categoryCode: eventCategory}"></option>
                     </select>
                     <select class="col-md-4 selectpicker filterable" data-size="9" tabindex="-98" data-key="industry" data-filterable="true">
                         <option value="all" data-val="all">All Industries</option>
@@ -1267,9 +1277,9 @@
                                 Export
                             </button>
                             <div class="dropdown-menu" aria-labelledby="btnExportGroup">
-                                <a class="dropdown-item export_as export_as_csv" alt-href='1'>as CSV</a>
-                                <a class="dropdown-item export_as export_as_image" alt-href='2'>as Image</a>
-                                <a class="dropdown-item export_as export_as_pdf" alt-href='3'>as PDF</a>
+                                <a class="dropdown-item export_as export_as_csv" alt-href='1' ohref="#">as CSV</a>
+                                <a class="dropdown-item export_as export_as_image" alt-href='2' ohref="#">as Image</a>
+                                <a class="dropdown-item export_as export_as_pdf" alt-href='3' ohref="#">as PDF</a>
                             </div>
                         </div>
                     </div>
@@ -1279,13 +1289,11 @@
 
         <div class="drilldown research_findings_outer" id="drilldown_empathy_2021">
             <div class="hidden">
-                <!--
-                <ul data-bind="foreach: SHRM.utils.pageConfig.tabs">
+                <ul data-bind="foreach: SHRM.utils.tabs">
                     <li>
-                        <a data-bind="text: name, attr: {id: id, href: '#' + id, json_category: json_category, tab_id: id}" data-toggle="tab"role="tab" aria-controls="home" aria-selected="true"></a>
+                        <a data-bind="text: name, attr: {id: id, href: '#' + id, categoryCode: eventCategory}" data-toggle="tab"role="tab" aria-controls="home" aria-selected="true"></a>
                     </li>
                 </ul>
-                -->
                 <table class="research_findings">
                     <thead>
                         <th>THEME</th><th>SCORE</th>
