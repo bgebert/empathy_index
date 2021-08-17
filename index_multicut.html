@@ -50,8 +50,6 @@
                     if (filtered_by){
                         console.log('filterJSON results: ' + filtered_by.length)    
                     }
-                    //debugger
-                    //alert('filterJSON: ' + $('.navpicker').find( "option:selected" ).attr('json_category'))
                     
                     return filtered_by
                 };
@@ -76,8 +74,6 @@
                             }
                         }
                     });
-                    //debugger
-                    //alert('filterSelects: ' + $('.navpicker').find( "option:selected" ).attr('json_category'))
                     
                     //get list of available dropdown options for selected filterable select
                     var setOptions = new Set()
@@ -165,7 +161,6 @@
                 };
 
                 this.getUrlParameter = function getUrlParameter(sParam) {
-                    debugger
                     var sPageURL = window.location.search.substring(1),
                         sURLVariables = sPageURL.split('&'),
                         sParameterName,
@@ -300,45 +295,22 @@
             }).apply(SHRM.utils);
 
             //Local functions
-            function initDefaults(bUpdateURL, filterBy, TopLevelType = null, startingTabGroup = null){
+            function loadDefaults(TopLevelType, startingTabGroup, bUpdateURL = false){
+                SHRM.utils.pageConfig.TopLevelType = TopLevelType
+                SHRM.utils.pageConfig.tg = startingTabGroup
+                SHRM.utils.pageConfig.exportType = ''
                 
-                if (TopLevelType === null){
-                    TopLevelType = SHRM.utils.getUrlParameter('TopLevelType')
-                    if (!TopLevelType){
-                        alert('URL is not properly configured.\n\nA properly configured URL should look similar to:\n.../index.html?TopLevelType=empathy&startingTabGroup=default')
-                        return
-                    }
-                }
-                if (startingTabGroup === null){
-                    startingTabGroup = SHRM.utils.getUrlParameter('startingTabGroup')
-                    if (!startingTabGroup){
-                        alert('URL is not properly configured.\n\nA properly configured URL should look similar to:\n.../index.html?TopLevelType=empathy&startingTabGroup=default')
-                        return
-                    }
-                }
-                
-                if(startingTabGroup){
-                    if (SHRM.utils.pageConfig.tabGroup[startingTabGroup]){
-                        SHRM.utils.pageConfig.tabs = SHRM.utils.pageConfig.tabGroup[startingTabGroup]
-                        categoryType = SHRM.utils.pageConfig.tabs[0].id
-                        if (!categoryType){
-                            alert('The configuration for SHRM.utils.' + startingTabGroup + ' has not been configured properly.  Missing id property.')
-                            return
-                        }
-                    }else{
-                        alert('The configuration for SHRM.utils.' + startingTabGroup + ' has not been configured properly.')
-                        return
+                if (SHRM.utils.pageConfig.tabGroup[startingTabGroup]){
+                    SHRM.utils.pageConfig.tabs = SHRM.utils.pageConfig.tabGroup[startingTabGroup]
+                    tab_id = SHRM.utils.pageConfig.tabs[0].id
+                    if (!tab_id){
+                        alert('The configuration for SHRM.utils.' + startingTabGroup + ' has not been configured properly.  Missing id property.')
+                        return false
                     }
                 }else{
-                    alert('URL is not properly configured.\n\nA properly configured URL should look similar to:\n.../index.html?TopLevelType=empathy&startingTabGroup=default')
-                    return
+                    alert('The configuration for SHRM.utils.' + startingTabGroup + ' has not been configured properly.')
+                    return false
                 }
-                
-                // Init variables
-                SHRM.utils.pageConfig.filterBy = filterBy
-                SHRM.utils.pageConfig.TopLevelType = TopLevelType
-                SHRM.utils.pageConfig.tabGroup = startingTabGroup
-                SHRM.utils.pageConfig.exportType = ''
                 
                 // generate default values for configDict
                 $('.filterable').each(function() {
@@ -348,37 +320,99 @@
                     }
                 });
 
-                SHRM.utils.initViewModel()
-                
-                //if (categoryType){
-                    //SHRM.utils.pageConfig.categoryText = $('a[href$="' + categoryType + '"]').text()
-                    //SHRM.utils.pageConfig.categoryCode = $('a[href$="' + categoryType + '"]').attr('categoryCode')
-                //}
+                return true
+            }
 
-                // load settings from previous visit to the page
-                if (localStorage.getItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + ".configDict")){
-                    json_string = localStorage.getItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + ".configDict")
+            function loadURLparams(){
+                if (SHRM.utils.getUrlParameter('tg')){
+                    startingTabGroup = SHRM.utils.getUrlParameter('tg')
+
+                    if (SHRM.utils.pageConfig.tabGroup[startingTabGroup]){
+                        SHRM.utils.pageConfig.tg = startingTabGroup
+                        SHRM.utils.pageConfig.tabs = SHRM.utils.pageConfig.tabGroup[startingTabGroup]
+                        tab_id = SHRM.utils.pageConfig.tabs[0].id
+                        if (!tab_id){
+                            alert('The url configuration for SHRM.utils.' + startingTabGroup + ' has not been configured properly.  Missing id property.')
+                            return false
+                        }
+                    }else{
+                        alert('The url configuration for SHRM.utils.' + startingTabGroup + ' has not been configured properly.')
+                        return false
+                    }
+                }
+
+                if (SHRM.utils.getUrlParameter('tid')){
+                    tab_id = SHRM.utils.getUrlParameter('tid')
+                    
+                    for (i = 0; i < SHRM.utils.pageConfig.tabs.length; i++) {
+                        if (SHRM.utils.pageConfig.tabs[i].id === tab_id) {
+                            SHRM.utils.pageConfig.tab_id = tab_id
+                        }
+                    }
+
+                    if (SHRM.utils.pageConfig.tab_id == tab_id){
+                        //The correct tab_id was found in the config
+                    }else{
+                        SHRM.utils.pageConfig.tab_id = SHRM.utils.pageConfig.tabs[0].id
+                    }
+                }
+
+
+                $('.filterable').each(function() {
+                    if ($(this).attr('data-filterable')){
+                        key = $(this).attr('data-key')
+                        if (SHRM.utils.getUrlParameter(key)){
+                            SHRM.utils.pageConfig.configDict[key] = SHRM.utils.getUrlParameter(key)
+                        }
+                    }
+                });
+
+                return true
+            }
+
+            function loadLocalStorage(){
+                if (localStorage.getItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + "." + SHRM.utils.pageConfig.tg + ".tid")){
+                    tab_id = localStorage.getItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + "." + SHRM.utils.pageConfig.tg + ".tid")
+                    
+                    for (i = 0; i < SHRM.utils.pageConfig.tabs.length; i++) {
+                        if (SHRM.utils.pageConfig.tabs[i].id === tab_id) {
+                            SHRM.utils.pageConfig.tab_id = tab_id
+                        }
+                    }
+
+                    if (SHRM.utils.pageConfig.tab_id == tab_id){
+                        //The correct tab_id was found in the config
+                    }else{
+                        SHRM.utils.pageConfig.tab_id = SHRM.utils.pageConfig.tabs[0].id
+                    }
+                }
+
+                if (localStorage.getItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + "." + SHRM.utils.pageConfig.tg + ".configDict")){
+                    json_string = localStorage.getItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + "." + SHRM.utils.pageConfig.tg + ".configDict")
                     SHRM.utils.pageConfig.configDict = JSON.parse(json_string)
                 }
-                if (localStorage.getItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + ".categoryType")) {
-                    categoryType = localStorage.getItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + "." + startingTabGroup +  ".categoryType")
-                    //$('a[href$="' + categoryType + '"]').trigger('click')
-                    //after loading settings from previous visit, be sure to set the .navpicker and .filterable selects to the appropriate values and then 
-                    //trigger the appropriate events
-                    bUpdateURL = false
+
+                return true
+            }
+
+            function initDefaults(TopLevelType, startingTabGroup, bUpdateURL = false){
+                if (loadDefaults(TopLevelType, startingTabGroup, bUpdateURL)){
+                    if (loadURLparams()){
+                        if (loadLocalStorage()){
+                            SHRM.utils.initViewModel()
+                
+                            SHRM.utils.pageConfig.bUpdateURL = bUpdateURL
+                            $('.selectpicker').selectpicker('refresh')
+                            
+                            showPageConent()
+                        }
+                    }
                 }
-                
-                SHRM.utils.pageConfig.bUpdateURL = bUpdateURL
-                $('.selectpicker').selectpicker('refresh')
-                
-                //// No tab (categoryType) has been previously selected, so the 1st tab is loaded by default
-                //// Unfortunately, 'show.bs.tab' is not triggered as expected, so we must force it
-                showPageConent()    // or $('a[href$="#' + categoryType + '"]').tab('show') if using tabs
             }
 
             function showPageConent(){
-                localStorage.setItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + "." + SHRM.utils.pageConfig.tabGroup + ".categoryType", $('.navpicker').find( "option:selected" ).attr('tab_id'))
-                $(".navpicker option[value='" + $('.navpicker').find( "option:selected" ).attr('tab_id') + "']").prop("selected", true);
+                //$(".navpicker option[value='" + $('.navpicker').find( "option:selected" ).attr('tab_id') + "']").prop("selected", true);
+                $(".navpicker option[value='" + SHRM.utils.pageConfig.tab_id + "']").prop("selected", true);
                 $('.navpicker').find('.filter-option-inner-inner').text($('.navpicker').find( "option:selected" ).text())
 
                 $('.filterable').each(function() {
@@ -394,7 +428,6 @@
                 });
 
                 $('.btn-filter').trigger('click')
-                //console.log('shown.bs.tab: ' + obj.is(':visible'))
             }
 
             function showSpinner(bShow){
@@ -430,7 +463,6 @@
                 });
 
                 $('.btn-filter').on('click', function (event){
-                    
                     //Save current filterable values to local storage
                     $('.filterable').each(function() {
                         if ($(this).attr('data-filterable')){
@@ -438,7 +470,9 @@
                             SHRM.utils.pageConfig.configDict[key] = $(this).val()
                         }
                     });
-                    localStorage.setItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + ".configDict", JSON.stringify(SHRM.utils.pageConfig.configDict))
+                    
+                    localStorage.setItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + "." + SHRM.utils.pageConfig.tg + ".tid", $('.navpicker').find( "option:selected" ).attr('tab_id'))
+                    localStorage.setItem("SHRM.utils." + SHRM.utils.pageConfig.TopLevelType + "." + SHRM.utils.pageConfig.tg + ".configDict", JSON.stringify(SHRM.utils.pageConfig.configDict))
                     
                     //Apply filter to the page: part 1
                     if (json_tabledata){
@@ -731,39 +765,42 @@
                 } );
                 */
 
-                //SHRM.utils.sleep(1000).then(() => { initDefaults(true, 'by-all', 'empathy', 'default'); });   //The line below was moved to $(window).load()
+                //SHRM.utils.sleep(1000).then(() => { initDefaults('empathy', 'main', false); });   //The line below was moved to $(window).load()
 
                 console.timeEnd('Page load');
             });
 
             $(window).load(function() {
-                initDefaults(false, 'by-all', 'empathy', 'main')  // ('by-1', ['region','industry','orgsize'], 'benefitsPortal', 'healthcare', null, 'drilldown-tab1')
+                initDefaults('empathy', 'main', false)  // ('by-1', ['region','industry','orgsize'], 'benefitsPortal', 'healthcare', null, 'drilldown-tab1')
             });
 
             SHRM.utils.pageConfig.tabGroup = new Object()    
             SHRM.utils.pageConfig.tabGroup.example = [
                 {
-                    "name": "Tab Text",
+                    "text": "Tab Text",
                     "json_category": "Tab_Text",
                     "id": "drilldown-tab1"
                 }
             ]
 
+            //the word "main" in the line below refers to the tabGroup name.
+            //the default tabGroup name "main" is passed into initDefaults
             SHRM.utils.pageConfig.tabGroup.main = [
                 {
-                    "name": "Empathy Index",
+                    "text": "Empathy Index",
                     "json_category": "default",
-                    "id": "drilldown-tab1"
+                    "id": "tab1"
                 },
                 {
-                    "name": "Test Name",
+                    "text": "Test Tab",
                     "json_category": "test",
-                    "id": "drilldown-tab2"
+                    "id": "tab2"
                 }
             ]
 
             json_tabledata = [
                 {"category":"test","industry":"all","orgsize":"all","region":"all","total_n":"5048","v1":"3.74","v2":"2.55","v3":"2.86","v4":"2.34","v5":"3.93","total":"15.42"},
+                {"category":"test","industry":"all","orgsize":"SM","region":"all","total_n":"2350","v1":"13.92","v2":"11.91","v3":"12.83","v4":"12.5","v5":"14.28","total":"65.44"},
                 {"category":"default","industry":"all","orgsize":"all","region":"all","total_n":"5048","v1":"13.74","v2":"12.55","v3":"12.86","v4":"12.34","v5":"13.93","total":"65.42"},
                 {"category":"default","industry":"all","orgsize":"SM","region":"all","total_n":"2350","v1":"13.92","v2":"11.91","v3":"12.83","v4":"12.5","v5":"14.28","total":"65.44"},
                 {"category":"default","industry":"all","orgsize":"MD","region":"all","total_n":"1231","v1":"13.53","v2":"12.48","v3":"12.56","v4":"12.17","v5":"13.37","total":"64.11"},
@@ -1225,8 +1262,8 @@
             </div>
             <div class="row blackrow">
                 <div class="col-12">
-                    <select class="col-md-4 selectpicker navpicker oselect-drilldown hidden" data-size="9" data-bind="foreach: SHRM.utils.pageConfig.tabs">
-                        <option data-bind="text: name, attr: {value: id, json_category: json_category, tab_id: id}"></option>
+                    <select class="col-md-4 selectpicker navpicker hidden" data-size="9" data-bind="foreach: SHRM.utils.pageConfig.tabs">
+                        <option data-bind="text: text, attr: {value: id, json_category: json_category, tab_id: id}"></option>
                     </select>
                     <select class="col-md-4 selectpicker filterable" data-size="9" tabindex="-98" data-key="industry" data-filterable="true">
                         <option value="all" data-val="all">All Industries</option>
